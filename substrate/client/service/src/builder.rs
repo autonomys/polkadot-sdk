@@ -1026,6 +1026,7 @@ where
 		network_service_provider.handle(),
 		import_queue.service(),
 		net_config.peer_store_handle(),
+		config.network.force_synced,
 	)?;
 
 	spawn_handle.spawn_blocking("syncing", None, syncing_engine.run());
@@ -1280,6 +1281,10 @@ where
 	pub metrics_registry: Option<&'a Registry>,
 	/// Metrics.
 	pub metrics: NotificationMetrics,
+	/// Parameter that allows node to forcefully assume it is synced, needed for network
+	/// bootstrapping only, as long as two synced nodes remain on the network at any time, this
+	/// doesn't need to be used.
+	pub force_synced: bool,
 }
 
 /// Build default syncing engine using [`build_default_block_downloader`] and
@@ -1312,6 +1317,7 @@ where
 		spawn_handle,
 		metrics_registry,
 		metrics,
+		force_synced,
 	} = config;
 
 	let block_downloader = build_default_block_downloader(
@@ -1347,6 +1353,7 @@ where
 		network_service_handle,
 		import_queue_service,
 		net_config.peer_store_handle(),
+		force_synced,
 	)?;
 
 	spawn_handle.spawn_blocking("syncing", None, syncing_engine.run());
