@@ -1224,7 +1224,7 @@ where
 	///   joined.
 	fn handle_sync_event(&mut self, event: SyncEvent) {
 		match event {
-			SyncEvent::PeerConnected { peer_id: remote, roles: _ } => {
+			SyncEvent::PeerConnected { peer_id: remote, roles: _, is_synced: _ } => {
 				if self.sync.is_major_syncing() {
 					log::trace!(
 						target: LOG_TARGET,
@@ -1242,6 +1242,9 @@ where
 				if let Err(err) = result {
 					log::error!(target: LOG_TARGET, "Add reserved peer failed: {}", err);
 				}
+			},
+			SyncEvent::PeerSyncState { .. } => {
+				// Ignore
 			},
 			SyncEvent::PeerDisconnected(remote) => {
 				if self.deferred_peers.remove(&remote) {

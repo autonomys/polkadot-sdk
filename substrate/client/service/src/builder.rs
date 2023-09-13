@@ -1119,6 +1119,7 @@ where
 		network_service_provider.handle(),
 		import_queue.service(),
 		net_config.peer_store_handle(),
+		config.network.force_synced,
 	)?;
 
 	// The syncing engine is spawned as an essential task: a node that can no longer
@@ -1420,6 +1421,10 @@ where
 	/// [`default_gap_sync_body_policy`] unless the node opts into storage-chain body
 	/// recovery.
 	pub gap_sync_body_policy: GapSyncBodyPolicyProvider,
+	/// Parameter that allows node to forcefully assume it is synced, needed for network
+	/// bootstrapping only, as long as two synced nodes remain on the network at any time, this
+	/// doesn't need to be used.
+	pub force_synced: bool,
 }
 
 /// Build default syncing engine using [`build_default_block_downloader`] and
@@ -1454,6 +1459,7 @@ where
 		metrics_registry,
 		metrics,
 		gap_sync_body_policy,
+		force_synced,
 	} = config;
 
 	let block_downloader = build_default_block_downloader(
@@ -1490,6 +1496,7 @@ where
 		network_service_handle,
 		import_queue_service,
 		net_config.peer_store_handle(),
+		force_synced,
 	)?;
 
 	// The syncing engine is spawned as an essential task: a node that can no longer
