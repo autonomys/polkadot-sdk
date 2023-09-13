@@ -95,7 +95,7 @@ pub struct PolkadotSyncingStrategy<B: BlockT, Client> {
 	chain_sync: Option<ChainSync<B, Client>>,
 	/// Connected peers and their best blocks used to seed a new strategy when switching to it in
 	/// `PolkadotSyncingStrategy::proceed_to_next`.
-	peer_best_blocks: HashMap<PeerId, (B::Hash, NumberFor<B>)>,
+	peer_best_blocks: HashMap<PeerId, (B::Hash, NumberFor<B>, bool)>,
 }
 
 impl<B: BlockT, Client> SyncingStrategy<B> for PolkadotSyncingStrategy<B, Client>
@@ -109,12 +109,20 @@ where
 		+ Sync
 		+ 'static,
 {
-	fn add_peer(&mut self, peer_id: PeerId, best_hash: B::Hash, best_number: NumberFor<B>) {
-		self.peer_best_blocks.insert(peer_id, (best_hash, best_number));
+	fn add_peer(
+		&mut self,
+		peer_id: PeerId,
+		best_hash: B::Hash,
+		best_number: NumberFor<B>,
+		is_synced: bool,
+	) {
+		self.peer_best_blocks.insert(peer_id, (best_hash, best_number, is_synced));
 
 		self.warp.as_mut().map(|s| s.add_peer(peer_id, best_hash, best_number));
 		self.state.as_mut().map(|s| s.add_peer(peer_id, best_hash, best_number));
-		self.chain_sync.as_mut().map(|s| s.add_peer(peer_id, best_hash, best_number));
+		self.chain_sync
+			.as_mut()
+			.map(|s| s.add_peer(peer_id, best_hash, best_number, is_synced));
 	}
 
 	fn remove_peer(&mut self, peer_id: &PeerId) {
@@ -130,7 +138,7 @@ where
 		is_best: bool,
 		peer_id: PeerId,
 		announce: &BlockAnnounce<B::Header>,
-	) -> Option<(B::Hash, NumberFor<B>)> {
+	) -> Option<(B::Hash, NumberFor<B>, bool)> {
 		let new_best = if let Some(ref mut warp) = self.warp {
 			warp.on_validated_block_announce(is_best, peer_id, announce)
 		} else if let Some(ref mut state) = self.state {
@@ -140,7 +148,7 @@ where
 		} else {
 			error!(target: LOG_TARGET, "No syncing strategy is active.");
 			debug_assert!(false);
-			Some((announce.header.hash(), *announce.header.number()))
+			Some((announce.header.hash(), *announce.header.number(), false))
 		};
 
 		if let Some(new_best) = new_best {
@@ -419,7 +427,7 @@ where
 						false,
 						self.peer_best_blocks
 							.iter()
-							.map(|(peer_id, (_, best_number))| (*peer_id, *best_number)),
+							.map(|(peer_id, (_, best_number, _))| (*peer_id, *best_number)),
 						self.config.state_request_protocol_name.clone(),
 					);
 
@@ -441,9 +449,11 @@ where
 						self.config.state_request_protocol_name.clone(),
 						self.config.block_downloader.clone(),
 						self.config.metrics_registry.as_ref(),
-						self.peer_best_blocks.iter().map(|(peer_id, (best_hash, best_number))| {
-							(*peer_id, *best_hash, *best_number)
-						}),
+						self.peer_best_blocks.iter().map(
+							|(peer_id, (best_hash, best_number, is_synced))| {
+								(*peer_id, *best_hash, *best_number, *is_synced)
+							},
+						),
 					) {
 						Ok(chain_sync) => chain_sync,
 						Err(e) => {
@@ -472,9 +482,11 @@ where
 				self.config.state_request_protocol_name.clone(),
 				self.config.block_downloader.clone(),
 				self.config.metrics_registry.as_ref(),
-				self.peer_best_blocks.iter().map(|(peer_id, (best_hash, best_number))| {
-					(*peer_id, *best_hash, *best_number)
-				}),
+				self.peer_best_blocks.iter().map(
+					|(peer_id, (best_hash, best_number, is_synced))| {
+						(*peer_id, *best_hash, *best_number, *is_synced)
+					},
+				),
 			) {
 				Ok(chain_sync) => chain_sync,
 				Err(e) => {

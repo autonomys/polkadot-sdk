@@ -688,6 +688,11 @@ pub struct NetworkConfiguration {
 
 	/// Networking backend used for P2P communication.
 	pub network_backend: NetworkBackendType,
+
+	/// Parameter that allows node to forcefully assume it is synced, needed for network
+	/// bootstrapping only, as long as two synced nodes remain on the network at any time, this
+	/// doesn't need to be used.
+	pub force_synced: bool,
 }
 
 impl NetworkConfiguration {
@@ -722,7 +727,8 @@ impl NetworkConfiguration {
 			kademlia_replication_factor: NonZeroUsize::new(DEFAULT_KADEMLIA_REPLICATION_FACTOR)
 				.expect("value is a constant; constant is non-zero; qed."),
 			ipfs_server: false,
-			network_backend: NetworkBackendType::Litep2p,
+			network_backend: NetworkBackendType::Libp2p,
+			force_synced: false,
 		}
 	}
 
