@@ -32,7 +32,12 @@ use sc_service::{
 	config::{Multiaddr, MultiaddrWithPeerId},
 	ChainSpec, ChainType,
 };
-use std::{borrow::Cow, num::NonZeroUsize, path::PathBuf};
+use std::{
+	borrow::Cow,
+	num::NonZeroUsize,
+	path::PathBuf,
+	sync::{atomic::AtomicBool, Arc},
+};
 
 /// Parameters used to create the network configuration.
 #[derive(Debug, Clone, Args)]
@@ -332,6 +337,7 @@ impl NetworkParams {
 			ipfs_server: self.ipfs_server,
 			ipfs_bootnodes: self.ipfs_bootnodes.clone(),
 			sync_mode: self.sync.into(),
+			pause_sync: Arc::new(AtomicBool::new(false)),
 			network_backend: self.network_backend.into(),
 		}
 	}
