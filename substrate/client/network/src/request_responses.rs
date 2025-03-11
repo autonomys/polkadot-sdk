@@ -317,7 +317,7 @@ pub enum Event {
 	/// This event is generated for statistics purposes.
 	RequestFinished {
 		/// Peer that we send a request to.
-		peer: PeerId,
+		peer: Option<PeerId>,
 		/// Name of the protocol in question.
 		protocol: ProtocolName,
 		/// Duration the request took.
@@ -479,7 +479,7 @@ impl RequestResponsesBehaviour {
 			Self::send_request_inner(
 				behaviour,
 				&mut self.pending_requests,
-				target,
+				target.into(),
 				protocol_name,
 				request,
 				fallback_request,
@@ -764,6 +764,7 @@ impl NetworkBehaviour for RequestResponsesBehaviour {
 						request_response::Event::Message {
 							peer,
 							message: Message::Request { request_id, request, channel, .. },
+							..
 						} => {
 							self.pending_responses_arrival_time
 								.insert((protocol.clone(), request_id).into(), Instant::now());
@@ -864,7 +865,7 @@ impl NetworkBehaviour for RequestResponsesBehaviour {
 							};
 
 							let out = Event::RequestFinished {
-								peer,
+								peer: Some(peer),
 								protocol: protocol.clone(),
 								duration: started.elapsed(),
 								result: delivered,
@@ -938,7 +939,7 @@ impl NetworkBehaviour for RequestResponsesBehaviour {
 							};
 
 							let out = Event::RequestFinished {
-								peer,
+								peer: Some(peer),
 								protocol: protocol.clone(),
 								duration: started.elapsed(),
 								result: Err(RequestFailure::Network(error)),
@@ -964,7 +965,7 @@ impl NetworkBehaviour for RequestResponsesBehaviour {
 						},
 
 						// A response to an inbound request has been sent.
-						request_response::Event::ResponseSent { request_id, peer } => {
+						request_response::Event::ResponseSent { request_id, peer, .. } => {
 							let arrival_time = self
 								.pending_responses_arrival_time
 								.remove(&(protocol.clone(), request_id).into())

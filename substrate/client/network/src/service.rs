@@ -1780,27 +1780,20 @@ where
 					if let Some(addresses) =
 						not_reported.then(|| self.boot_node_ids.get(&peer_id)).flatten()
 					{
-						if let DialError::WrongPeerId { obtained, endpoint } = &error {
-							if let ConnectedPoint::Dialer {
-								address,
-								role_override: _,
-								port_use: _,
-							} = endpoint
-							{
-								let address_without_peer_id = parse_addr(address.clone().into())
-									.map_or_else(|_| address.clone(), |r| r.1.into());
+						if let DialError::WrongPeerId { obtained, address } = &error {
+							let address_without_peer_id = parse_addr(address.clone().into())
+								.map_or_else(|_| address.clone(), |r| r.1.into());
 
-								// Only report for address of boot node that was added at startup of
-								// the node and not for any address that the node learned of the
-								// boot node.
-								if addresses.iter().any(|a| address_without_peer_id == *a) {
-									warn!(
+							// Only report for address of boot node that was added at startup of
+							// the node and not for any address that the node learned of the
+							// boot node.
+							if addresses.iter().any(|a| address_without_peer_id == *a) {
+								warn!(
 										"💔 The bootnode you want to connect to at `{address}` provided a \
 										 different peer ID `{obtained}` than the one you expect `{peer_id}`.",
 									);
 
-									self.reported_invalid_boot_nodes.insert(peer_id);
-								}
+								self.reported_invalid_boot_nodes.insert(peer_id);
 							}
 						}
 					}
@@ -1818,9 +1811,9 @@ where
 						DialError::LocalPeerId { .. } => Some("local-peer-id"),
 						DialError::WrongPeerId { .. } => Some("invalid-peer-id"),
 						DialError::Transport(_) => Some("transport-error"),
-						DialError::NoAddresses |
-						DialError::DialPeerConditionFalse(_) |
-						DialError::Aborted => None, // ignore them
+						DialError::NoAddresses
+						| DialError::DialPeerConditionFalse(_)
+						| DialError::Aborted => None, // ignore them
 					};
 					if let Some(reason) = reason {
 						metrics.pending_connections_errors_total.with_label_values(&[reason]).inc();
@@ -1841,6 +1834,7 @@ where
 				local_addr,
 				send_back_addr,
 				error,
+				..
 			} => {
 				debug!(
 					target: LOG_TARGET,
