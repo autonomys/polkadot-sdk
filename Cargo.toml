@@ -902,9 +902,9 @@ kvdb-shared-tests = { version = "0.11.0" }
 landlock = { version = "0.3.0" }
 libc = { version = "0.2.155" }
 libfuzzer-sys = { version = "0.4" }
-libp2p = { version = "0.54.1" }
-libp2p-identity = { version = "0.2.9" }
-libp2p-kad = { version = "0.46.2", default-features = false }
+libp2p = { version = "0.56.0", git = "https://github.com/autonomys/rust-libp2p", rev = "0c2e22fe724e5101bc5ad5763b1c3d7aa452870a" }
+libp2p-identity = { version = "0.2.12", git = "https://github.com/autonomys/rust-libp2p", rev = "0c2e22fe724e5101bc5ad5763b1c3d7aa452870a" }
+libp2p-kad = { version = "0.48.0", git = "https://github.com/autonomys/rust-libp2p", rev = "0c2e22fe724e5101bc5ad5763b1c3d7aa452870a", default-features = false }
 libsecp256k1 = { version = "0.7.0", default-features = false }
 linked-hash-map = { version = "0.5.4" }
 linked_hash_set = { version = "0.1.4" }
@@ -930,7 +930,7 @@ mmr-rpc = { path = "substrate/client/merkle-mountain-range/rpc", default-feature
 mockall = { version = "0.13.1" }
 multiaddr = { version = "0.18.1" }
 multihash = { version = "0.19.1", default-features = false }
-multistream-select = { version = "0.13.0" }
+multistream-select = { version = "0.13.0", git = "https://github.com/autonomys/rust-libp2p", rev = "0c2e22fe724e5101bc5ad5763b1c3d7aa452870a" }
 names = { version = "0.14.0", default-features = false }
 nix = { version = "0.29.0" }
 node-cli = { path = "substrate/bin/node/cli", package = "staging-node-cli" }
@@ -1581,3 +1581,9 @@ wasmi = { opt-level = 3 }
 x25519-dalek = { opt-level = 3 }
 yamux = { opt-level = 3 }
 zeroize = { opt-level = 3 }
+
+[patch.crates-io]
+
+# Patch away `libp2p-identity` in our dependency tree with the git version.
+# For details see: https://github.com/autonomys/rust-libp2p/blob/04c2e649b1f5482b8c3466b0fdbd1815b3126a48/Cargo.toml#L140-L145
+libp2p-identity = { git = "https://github.com/autonomys/rust-libp2p", rev = "0c2e22fe724e5101bc5ad5763b1c3d7aa452870a" }
