@@ -1,6 +1,6 @@
 [package]
 name = "pallet-collective-content"
-version = "0.17.0"
+version = "0.17.1"
 authors = ["Parity Technologies <admin@parity.io>"]
 edition.workspace = true
 description = "Managed content"

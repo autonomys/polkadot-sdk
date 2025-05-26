@@ -1948,7 +1948,8 @@ pub mod pallet {
 		AlreadyMigrated,
 		/// The pool or member delegation has not migrated yet to delegate stake.
 		NotMigrated,
-		/// This call is not allowed in the current state of the pallet.
+		/// This call is not allowed in the current state of the pallet or an unspecific error
+		/// occurred.
 		NotSupported,
 	}
 
@@ -2300,7 +2301,7 @@ pub mod pallet {
 
 			let slash_weight =
 				// apply slash if any before withdraw.
-				match Self::do_apply_slash(&member_account, None) {
+				match Self::do_apply_slash(&member_account, None, false) {
 					Ok(_) => T::WeightInfo::apply_slash(),
 					Err(e) => {
 						let no_pending_slash: DispatchResult = Err(Error::<T>::NothingToSlash.into());
@@ -2974,8 +2975,10 @@ pub mod pallet {
 		/// Fails unless [`crate::pallet::Config::StakeAdapter`] is of strategy type:
 		/// [`adapter::StakeStrategyType::Delegate`].
 		///
-		/// This call can be dispatched permissionlessly (i.e. by any account). If the member has
-		/// slash to be applied, caller may be rewarded with the part of the slash.
+		/// The pending slash amount of the member must be equal or more than `ExistentialDeposit`.
+		/// This call can be dispatched permissionlessly (i.e. by any account). If the execution
+		/// is successful, fee is refunded and caller may be rewarded with a part of the slash
+		/// based on the [`crate::pallet::Config::StakeAdapter`] configuration.
 		#[pallet::call_index(23)]
 		#[pallet::weight(T::WeightInfo::apply_slash())]
 		pub fn apply_slash(
@@ -2989,7 +2992,7 @@ pub mod pallet {
 
 			let who = ensure_signed(origin)?;
 			let member_account = T::Lookup::lookup(member_account)?;
-			Self::do_apply_slash(&member_account, Some(who))?;
+			Self::do_apply_slash(&member_account, Some(who), true)?;
 
 			// If successful, refund the fees.
 			Ok(Pays::No.into())
@@ -3574,14 +3577,20 @@ impl<T: Config> Pallet<T> {
 	fn do_apply_slash(
 		member_account: &T::AccountId,
 		reporter: Option<T::AccountId>,
+		enforce_min_slash: bool,
 	) -> DispatchResult {
 		let member = PoolMembers::<T>::get(member_account).ok_or(Error::<T>::PoolMemberNotFound)?;
 
 		let pending_slash =
 			Self::member_pending_slash(Member::from(member_account.clone()), member.clone())?;
 
-		// if nothing to slash, return error.
+		// ensure there is something to slash.
 		ensure!(!pending_slash.is_zero(), Error::<T>::NothingToSlash);
+
+		if enforce_min_slash {
+			// ensure slashed amount is at least the minimum balance.
+			ensure!(pending_slash >= T::Currency::minimum_balance(), Error::<T>::NotSupported);
+		}
 
 		T::StakeAdapter::member_slash(
 			Member::from(member_account.clone()),
@@ -3946,6 +3955,9 @@ impl<T: Config> Pallet<T> {
 	/// Returns the unapplied slash of a member.
 	///
 	/// Pending slash is only applicable with [`adapter::DelegateStake`] strategy.
+	///
+	/// If pending slash of the member exceeds `ExistentialDeposit`, it can be reported on
+	/// chain via [`Call::apply_slash`].
 	pub fn api_member_pending_slash(who: T::AccountId) -> BalanceOf<T> {
 		PoolMembers::<T>::get(who.clone())
 			.map(|pool_member| {
@@ -4077,5 +4089,13 @@ impl<T: Config> sp_staking::OnStakingUpdate<T::AccountId, BalanceOf<T>> for Pall
 				tvl.saturating_reduce(amount);
 			});
 		}
+	}
+}
+
+/// A utility struct that provides a way to check if a given account is a pool member.
+pub struct AllPoolMembers<T: Config>(PhantomData<T>);
+impl<T: Config> frame_support::traits::Contains<T::AccountId> for AllPoolMembers<T> {
+	fn contains(t: &T::AccountId) -> bool {
+		PoolMembers::<T>::contains_key(t)
 	}
 }

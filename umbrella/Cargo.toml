@@ -1,9 +1,8 @@
 [package]
 name = "polkadot-sdk"
-version = "0.10.1"
+version = "0.12.2"
 description = "Polkadot SDK umbrella crate."
 license = "Apache-2.0"
-publish = false
 
 [features]
 default = ["std"]
@@ -121,9 +120,6 @@ std = [
 	"pallet-recovery?/std",
 	"pallet-referenda?/std",
 	"pallet-remark?/std",
-	"pallet-revive-fixtures?/std",
-	"pallet-revive-mock-network?/std",
-	"pallet-revive?/std",
 	"pallet-root-offences?/std",
 	"pallet-root-testing?/std",
 	"pallet-safe-mode?/std",
@@ -310,8 +306,6 @@ runtime-benchmarks = [
 	"pallet-recovery?/runtime-benchmarks",
 	"pallet-referenda?/runtime-benchmarks",
 	"pallet-remark?/runtime-benchmarks",
-	"pallet-revive-mock-network?/runtime-benchmarks",
-	"pallet-revive?/runtime-benchmarks",
 	"pallet-root-offences?/runtime-benchmarks",
 	"pallet-safe-mode?/runtime-benchmarks",
 	"pallet-salary?/runtime-benchmarks",
@@ -366,6 +360,7 @@ runtime-benchmarks = [
 	"staging-xcm-executor?/runtime-benchmarks",
 	"xcm-runtime-apis?/runtime-benchmarks",
 ]
+
 try-runtime = [
 	"cumulus-pallet-aura-ext?/try-runtime",
 	"cumulus-pallet-dmp-queue?/try-runtime",
@@ -443,8 +438,6 @@ try-runtime = [
 	"pallet-recovery?/try-runtime",
 	"pallet-referenda?/try-runtime",
 	"pallet-remark?/try-runtime",
-	"pallet-revive-mock-network?/try-runtime",
-	"pallet-revive?/try-runtime",
 	"pallet-root-offences?/try-runtime",
 	"pallet-root-testing?/try-runtime",
 	"pallet-safe-mode?/try-runtime",
@@ -542,7 +535,234 @@ with-tracing = [
 	"sp-tracing?/with-tracing",
 	"sp-tracing?/with-tracing",
 ]
-runtime-full = ["assets-common", "binary-merkle-tree", "bp-header-chain", "bp-messages", "bp-parachains", "bp-polkadot", "bp-polkadot-core", "bp-relayers", "bp-runtime", "bp-test-utils", "bp-xcm-bridge-hub", "bp-xcm-bridge-hub-router", "bridge-hub-common", "bridge-runtime-common", "cumulus-pallet-aura-ext", "cumulus-pallet-dmp-queue", "cumulus-pallet-parachain-system", "cumulus-pallet-parachain-system-proc-macro", "cumulus-pallet-session-benchmarking", "cumulus-pallet-solo-to-para", "cumulus-pallet-xcm", "cumulus-pallet-xcmp-queue", "cumulus-ping", "cumulus-primitives-aura", "cumulus-primitives-core", "cumulus-primitives-parachain-inherent", "cumulus-primitives-proof-size-hostfunction", "cumulus-primitives-storage-weight-reclaim", "cumulus-primitives-timestamp", "cumulus-primitives-utility", "frame-benchmarking", "frame-benchmarking-pallet-pov", "frame-election-provider-solution-type", "frame-election-provider-support", "frame-executive", "frame-metadata-hash-extension", "frame-support", "frame-support-procedural", "frame-support-procedural-tools-derive", "frame-system", "frame-system-benchmarking", "frame-system-rpc-runtime-api", "frame-try-runtime", "pallet-alliance", "pallet-asset-conversion", "pallet-asset-conversion-ops", "pallet-asset-conversion-tx-payment", "pallet-asset-rate", "pallet-asset-tx-payment", "pallet-assets", "pallet-assets-freezer", "pallet-atomic-swap", "pallet-aura", "pallet-authority-discovery", "pallet-authorship", "pallet-babe", "pallet-bags-list", "pallet-balances", "pallet-beefy", "pallet-beefy-mmr", "pallet-bounties", "pallet-bridge-grandpa", "pallet-bridge-messages", "pallet-bridge-parachains", "pallet-bridge-relayers", "pallet-broker", "pallet-child-bounties", "pallet-collator-selection", "pallet-collective", "pallet-collective-content", "pallet-contracts", "pallet-contracts-proc-macro", "pallet-contracts-uapi", "pallet-conviction-voting", "pallet-core-fellowship", "pallet-delegated-staking", "pallet-democracy", "pallet-dev-mode", "pallet-election-provider-multi-phase", "pallet-election-provider-support-benchmarking", "pallet-elections-phragmen", "pallet-fast-unstake", "pallet-glutton", "pallet-grandpa", "pallet-identity", "pallet-im-online", "pallet-indices", "pallet-insecure-randomness-collective-flip", "pallet-lottery", "pallet-membership", "pallet-message-queue", "pallet-migrations", "pallet-mixnet", "pallet-mmr", "pallet-multisig", "pallet-nft-fractionalization", "pallet-nfts", "pallet-nfts-runtime-api", "pallet-nis", "pallet-node-authorization", "pallet-nomination-pools", "pallet-nomination-pools-benchmarking", "pallet-nomination-pools-runtime-api", "pallet-offences", "pallet-offences-benchmarking", "pallet-paged-list", "pallet-parameters", "pallet-preimage", "pallet-proxy", "pallet-ranked-collective", "pallet-recovery", "pallet-referenda", "pallet-remark", "pallet-revive", "pallet-revive-fixtures", "pallet-revive-proc-macro", "pallet-revive-uapi", "pallet-root-offences", "pallet-root-testing", "pallet-safe-mode", "pallet-salary", "pallet-scheduler", "pallet-scored-pool", "pallet-session", "pallet-session-benchmarking", "pallet-skip-feeless-payment", "pallet-society", "pallet-staking", "pallet-staking-reward-curve", "pallet-staking-reward-fn", "pallet-staking-runtime-api", "pallet-state-trie-migration", "pallet-statement", "pallet-sudo", "pallet-timestamp", "pallet-tips", "pallet-transaction-payment", "pallet-transaction-payment-rpc-runtime-api", "pallet-transaction-storage", "pallet-treasury", "pallet-tx-pause", "pallet-uniques", "pallet-utility", "pallet-verify-signature", "pallet-vesting", "pallet-whitelist", "pallet-xcm", "pallet-xcm-benchmarks", "pallet-xcm-bridge-hub", "pallet-xcm-bridge-hub-router", "parachains-common", "polkadot-core-primitives", "polkadot-parachain-primitives", "polkadot-primitives", "polkadot-runtime-common", "polkadot-runtime-metrics", "polkadot-runtime-parachains", "polkadot-sdk-frame", "sc-chain-spec-derive", "sc-tracing-proc-macro", "slot-range-helper", "snowbridge-beacon-primitives", "snowbridge-core", "snowbridge-ethereum", "snowbridge-outbound-queue-merkle-tree", "snowbridge-outbound-queue-runtime-api", "snowbridge-pallet-ethereum-client", "snowbridge-pallet-ethereum-client-fixtures", "snowbridge-pallet-inbound-queue", "snowbridge-pallet-inbound-queue-fixtures", "snowbridge-pallet-outbound-queue", "snowbridge-pallet-system", "snowbridge-router-primitives", "snowbridge-runtime-common", "snowbridge-system-runtime-api", "sp-api", "sp-api-proc-macro", "sp-application-crypto", "sp-arithmetic", "sp-authority-discovery", "sp-block-builder", "sp-consensus-aura", "sp-consensus-babe", "sp-consensus-beefy", "sp-consensus-grandpa", "sp-consensus-pow", "sp-consensus-slots", "sp-core", "sp-crypto-ec-utils", "sp-crypto-hashing", "sp-crypto-hashing-proc-macro", "sp-debug-derive", "sp-externalities", "sp-genesis-builder", "sp-inherents", "sp-io", "sp-keyring", "sp-keystore", "sp-metadata-ir", "sp-mixnet", "sp-mmr-primitives", "sp-npos-elections", "sp-offchain", "sp-runtime", "sp-runtime-interface", "sp-runtime-interface-proc-macro", "sp-session", "sp-staking", "sp-state-machine", "sp-statement-store", "sp-std", "sp-storage", "sp-timestamp", "sp-tracing", "sp-transaction-pool", "sp-transaction-storage-proof", "sp-trie", "sp-version", "sp-version-proc-macro", "sp-wasm-interface", "sp-weights", "staging-parachain-info", "staging-xcm", "staging-xcm-builder", "staging-xcm-executor", "substrate-bip39", "testnet-parachains-constants", "tracing-gum-proc-macro", "xcm-procedural", "xcm-runtime-apis"]
+runtime-full = [
+	"assets-common",
+	"binary-merkle-tree",
+	"bp-header-chain",
+	"bp-messages",
+	"bp-parachains",
+	"bp-polkadot",
+	"bp-polkadot-core",
+	"bp-relayers",
+	"bp-runtime",
+	"bp-test-utils",
+	"bp-xcm-bridge-hub",
+	"bp-xcm-bridge-hub-router",
+	"bridge-hub-common",
+	"bridge-runtime-common",
+	"cumulus-pallet-aura-ext",
+	"cumulus-pallet-dmp-queue",
+	"cumulus-pallet-parachain-system",
+	"cumulus-pallet-parachain-system-proc-macro",
+	"cumulus-pallet-session-benchmarking",
+	"cumulus-pallet-solo-to-para",
+	"cumulus-pallet-xcm",
+	"cumulus-pallet-xcmp-queue",
+	"cumulus-ping",
+	"cumulus-primitives-aura",
+	"cumulus-primitives-core",
+	"cumulus-primitives-parachain-inherent",
+	"cumulus-primitives-proof-size-hostfunction",
+	"cumulus-primitives-storage-weight-reclaim",
+	"cumulus-primitives-timestamp",
+	"cumulus-primitives-utility",
+	"frame-benchmarking",
+	"frame-benchmarking-pallet-pov",
+	"frame-election-provider-solution-type",
+	"frame-election-provider-support",
+	"frame-executive",
+	"frame-metadata-hash-extension",
+	"frame-support",
+	"frame-support-procedural",
+	"frame-support-procedural-tools-derive",
+	"frame-system",
+	"frame-system-benchmarking",
+	"frame-system-rpc-runtime-api",
+	"frame-try-runtime",
+	"pallet-alliance",
+	"pallet-asset-conversion",
+	"pallet-asset-conversion-ops",
+	"pallet-asset-conversion-tx-payment",
+	"pallet-asset-rate",
+	"pallet-asset-tx-payment",
+	"pallet-assets",
+	"pallet-assets-freezer",
+	"pallet-atomic-swap",
+	"pallet-aura",
+	"pallet-authority-discovery",
+	"pallet-authorship",
+	"pallet-babe",
+	"pallet-bags-list",
+	"pallet-balances",
+	"pallet-beefy",
+	"pallet-beefy-mmr",
+	"pallet-bounties",
+	"pallet-bridge-grandpa",
+	"pallet-bridge-messages",
+	"pallet-bridge-parachains",
+	"pallet-bridge-relayers",
+	"pallet-broker",
+	"pallet-child-bounties",
+	"pallet-collator-selection",
+	"pallet-collective",
+	"pallet-collective-content",
+	"pallet-contracts",
+	"pallet-contracts-proc-macro",
+	"pallet-contracts-uapi",
+	"pallet-conviction-voting",
+	"pallet-core-fellowship",
+	"pallet-delegated-staking",
+	"pallet-democracy",
+	"pallet-dev-mode",
+	"pallet-election-provider-multi-phase",
+	"pallet-election-provider-support-benchmarking",
+	"pallet-elections-phragmen",
+	"pallet-fast-unstake",
+	"pallet-glutton",
+	"pallet-grandpa",
+	"pallet-identity",
+	"pallet-im-online",
+	"pallet-indices",
+	"pallet-insecure-randomness-collective-flip",
+	"pallet-lottery",
+	"pallet-membership",
+	"pallet-message-queue",
+	"pallet-migrations",
+	"pallet-mixnet",
+	"pallet-mmr",
+	"pallet-multisig",
+	"pallet-nft-fractionalization",
+	"pallet-nfts",
+	"pallet-nfts-runtime-api",
+	"pallet-nis",
+	"pallet-node-authorization",
+	"pallet-nomination-pools",
+	"pallet-nomination-pools-benchmarking",
+	"pallet-nomination-pools-runtime-api",
+	"pallet-offences",
+	"pallet-offences-benchmarking",
+	"pallet-paged-list",
+	"pallet-parameters",
+	"pallet-preimage",
+	"pallet-proxy",
+	"pallet-ranked-collective",
+	"pallet-recovery",
+	"pallet-referenda",
+	"pallet-remark",
+	"pallet-root-offences",
+	"pallet-root-testing",
+	"pallet-safe-mode",
+	"pallet-salary",
+	"pallet-scheduler",
+	"pallet-scored-pool",
+	"pallet-session",
+	"pallet-session-benchmarking",
+	"pallet-skip-feeless-payment",
+	"pallet-society",
+	"pallet-staking",
+	"pallet-staking-reward-curve",
+	"pallet-staking-reward-fn",
+	"pallet-staking-runtime-api",
+	"pallet-state-trie-migration",
+	"pallet-statement",
+	"pallet-sudo",
+	"pallet-timestamp",
+	"pallet-tips",
+	"pallet-transaction-payment",
+	"pallet-transaction-payment-rpc-runtime-api",
+	"pallet-transaction-storage",
+	"pallet-treasury",
+	"pallet-tx-pause",
+	"pallet-uniques",
+	"pallet-utility",
+	"pallet-verify-signature",
+	"pallet-vesting",
+	"pallet-whitelist",
+	"pallet-xcm",
+	"pallet-xcm-benchmarks",
+	"pallet-xcm-bridge-hub",
+	"pallet-xcm-bridge-hub-router",
+	"parachains-common",
+	"polkadot-core-primitives",
+	"polkadot-parachain-primitives",
+	"polkadot-primitives",
+	"polkadot-runtime-common",
+	"polkadot-runtime-metrics",
+	"polkadot-runtime-parachains",
+	"polkadot-sdk-frame",
+	"sc-chain-spec-derive",
+	"sc-tracing-proc-macro",
+	"slot-range-helper",
+	"snowbridge-beacon-primitives",
+	"snowbridge-core",
+	"snowbridge-ethereum",
+	"snowbridge-outbound-queue-merkle-tree",
+	"snowbridge-outbound-queue-runtime-api",
+	"snowbridge-pallet-ethereum-client",
+	"snowbridge-pallet-ethereum-client-fixtures",
+	"snowbridge-pallet-inbound-queue",
+	"snowbridge-pallet-inbound-queue-fixtures",
+	"snowbridge-pallet-outbound-queue",
+	"snowbridge-pallet-system",
+	"snowbridge-router-primitives",
+	"snowbridge-runtime-common",
+	"snowbridge-system-runtime-api",
+	"sp-api",
+	"sp-api-proc-macro",
+	"sp-application-crypto",
+	"sp-arithmetic",
+	"sp-authority-discovery",
+	"sp-block-builder",
+	"sp-consensus-aura",
+	"sp-consensus-babe",
+	"sp-consensus-beefy",
+	"sp-consensus-grandpa",
+	"sp-consensus-pow",
+	"sp-consensus-slots",
+	"sp-core",
+	"sp-crypto-ec-utils",
+	"sp-crypto-hashing",
+	"sp-crypto-hashing-proc-macro",
+	"sp-debug-derive",
+	"sp-externalities",
+	"sp-genesis-builder",
+	"sp-inherents",
+	"sp-io",
+	"sp-keyring",
+	"sp-keystore",
+	"sp-metadata-ir",
+	"sp-mixnet",
+	"sp-mmr-primitives",
+	"sp-npos-elections",
+	"sp-offchain",
+	"sp-runtime",
+	"sp-runtime-interface",
+	"sp-runtime-interface-proc-macro",
+	"sp-session",
+	"sp-staking",
+	"sp-state-machine",
+	"sp-statement-store",
+	"sp-std",
+	"sp-storage",
+	"sp-timestamp",
+	"sp-tracing",
+	"sp-transaction-pool",
+	"sp-transaction-storage-proof",
+	"sp-trie",
+	"sp-version",
+	"sp-version-proc-macro",
+	"sp-wasm-interface",
+	"sp-weights",
+	"staging-parachain-info",
+	"staging-xcm",
+	"staging-xcm-builder",
+	"staging-xcm-executor",
+	"substrate-bip39",
+	"testnet-parachains-constants",
+	"tracing-gum-proc-macro",
+	"xcm-procedural",
+	"xcm-runtime-apis",
+]
 runtime = [
 	"frame-benchmarking",
 	"frame-benchmarking-pallet-pov",
@@ -606,7 +826,153 @@ runtime = [
 	"sp-wasm-interface",
 	"sp-weights",
 ]
-node = ["asset-test-utils", "bridge-hub-test-utils", "cumulus-client-cli", "cumulus-client-collator", "cumulus-client-consensus-aura", "cumulus-client-consensus-common", "cumulus-client-consensus-proposer", "cumulus-client-consensus-relay-chain", "cumulus-client-network", "cumulus-client-parachain-inherent", "cumulus-client-pov-recovery", "cumulus-client-service", "cumulus-relay-chain-inprocess-interface", "cumulus-relay-chain-interface", "cumulus-relay-chain-minimal-node", "cumulus-relay-chain-rpc-interface", "cumulus-test-relay-sproof-builder", "emulated-integration-tests-common", "fork-tree", "frame-benchmarking-cli", "frame-remote-externalities", "frame-support-procedural-tools", "generate-bags", "mmr-gadget", "mmr-rpc", "pallet-contracts-mock-network", "pallet-revive-eth-rpc", "pallet-revive-mock-network", "pallet-transaction-payment-rpc", "parachains-runtimes-test-utils", "polkadot-approval-distribution", "polkadot-availability-bitfield-distribution", "polkadot-availability-distribution", "polkadot-availability-recovery", "polkadot-cli", "polkadot-collator-protocol", "polkadot-dispute-distribution", "polkadot-erasure-coding", "polkadot-gossip-support", "polkadot-network-bridge", "polkadot-node-collation-generation", "polkadot-node-core-approval-voting", "polkadot-node-core-approval-voting-parallel", "polkadot-node-core-av-store", "polkadot-node-core-backing", "polkadot-node-core-bitfield-signing", "polkadot-node-core-candidate-validation", "polkadot-node-core-chain-api", "polkadot-node-core-chain-selection", "polkadot-node-core-dispute-coordinator", "polkadot-node-core-parachains-inherent", "polkadot-node-core-prospective-parachains", "polkadot-node-core-provisioner", "polkadot-node-core-pvf", "polkadot-node-core-pvf-checker", "polkadot-node-core-pvf-common", "polkadot-node-core-pvf-execute-worker", "polkadot-node-core-pvf-prepare-worker", "polkadot-node-core-runtime-api", "polkadot-node-metrics", "polkadot-node-network-protocol", "polkadot-node-primitives", "polkadot-node-subsystem", "polkadot-node-subsystem-types", "polkadot-node-subsystem-util", "polkadot-omni-node-lib", "polkadot-overseer", "polkadot-rpc", "polkadot-service", "polkadot-statement-distribution", "polkadot-statement-table", "sc-allocator", "sc-authority-discovery", "sc-basic-authorship", "sc-block-builder", "sc-chain-spec", "sc-cli", "sc-client-api", "sc-client-db", "sc-consensus", "sc-consensus-aura", "sc-consensus-babe", "sc-consensus-babe-rpc", "sc-consensus-beefy", "sc-consensus-beefy-rpc", "sc-consensus-epochs", "sc-consensus-grandpa", "sc-consensus-grandpa-rpc", "sc-consensus-manual-seal", "sc-consensus-pow", "sc-consensus-slots", "sc-executor", "sc-executor-common", "sc-executor-polkavm", "sc-executor-wasmtime", "sc-informant", "sc-keystore", "sc-mixnet", "sc-network", "sc-network-common", "sc-network-gossip", "sc-network-light", "sc-network-statement", "sc-network-sync", "sc-network-transactions", "sc-network-types", "sc-offchain", "sc-proposer-metrics", "sc-rpc", "sc-rpc-api", "sc-rpc-server", "sc-rpc-spec-v2", "sc-service", "sc-state-db", "sc-statement-store", "sc-storage-monitor", "sc-sync-state-rpc", "sc-sysinfo", "sc-telemetry", "sc-tracing", "sc-transaction-pool", "sc-transaction-pool-api", "sc-utils", "snowbridge-runtime-test-common", "sp-blockchain", "sp-consensus", "sp-core-hashing", "sp-core-hashing-proc-macro", "sp-database", "sp-maybe-compressed-blob", "sp-panic-handler", "sp-rpc", "staging-chain-spec-builder", "staging-node-inspect", "staging-tracking-allocator", "std", "subkey", "substrate-build-script-utils", "substrate-frame-rpc-support", "substrate-frame-rpc-system", "substrate-prometheus-endpoint", "substrate-rpc-client", "substrate-state-trie-migration-rpc", "substrate-wasm-builder", "tracing-gum", "xcm-emulator", "xcm-simulator"]
+node = [
+	"asset-test-utils",
+	"bridge-hub-test-utils",
+	"cumulus-client-cli",
+	"cumulus-client-collator",
+	"cumulus-client-consensus-aura",
+	"cumulus-client-consensus-common",
+	"cumulus-client-consensus-proposer",
+	"cumulus-client-consensus-relay-chain",
+	"cumulus-client-network",
+	"cumulus-client-parachain-inherent",
+	"cumulus-client-pov-recovery",
+	"cumulus-client-service",
+	"cumulus-relay-chain-inprocess-interface",
+	"cumulus-relay-chain-interface",
+	"cumulus-relay-chain-minimal-node",
+	"cumulus-relay-chain-rpc-interface",
+	"cumulus-test-relay-sproof-builder",
+	"emulated-integration-tests-common",
+	"fork-tree",
+	"frame-benchmarking-cli",
+	"frame-remote-externalities",
+	"frame-support-procedural-tools",
+	"generate-bags",
+	"mmr-gadget",
+	"mmr-rpc",
+	"pallet-contracts-mock-network",
+	"pallet-transaction-payment-rpc",
+	"parachains-runtimes-test-utils",
+	"polkadot-approval-distribution",
+	"polkadot-availability-bitfield-distribution",
+	"polkadot-availability-distribution",
+	"polkadot-availability-recovery",
+	"polkadot-cli",
+	"polkadot-collator-protocol",
+	"polkadot-dispute-distribution",
+	"polkadot-erasure-coding",
+	"polkadot-gossip-support",
+	"polkadot-network-bridge",
+	"polkadot-node-collation-generation",
+	"polkadot-node-core-approval-voting",
+	"polkadot-node-core-approval-voting-parallel",
+	"polkadot-node-core-av-store",
+	"polkadot-node-core-backing",
+	"polkadot-node-core-bitfield-signing",
+	"polkadot-node-core-candidate-validation",
+	"polkadot-node-core-chain-api",
+	"polkadot-node-core-chain-selection",
+	"polkadot-node-core-dispute-coordinator",
+	"polkadot-node-core-parachains-inherent",
+	"polkadot-node-core-prospective-parachains",
+	"polkadot-node-core-provisioner",
+	"polkadot-node-core-pvf",
+	"polkadot-node-core-pvf-checker",
+	"polkadot-node-core-pvf-common",
+	"polkadot-node-core-pvf-execute-worker",
+	"polkadot-node-core-pvf-prepare-worker",
+	"polkadot-node-core-runtime-api",
+	"polkadot-node-metrics",
+	"polkadot-node-network-protocol",
+	"polkadot-node-primitives",
+	"polkadot-node-subsystem",
+	"polkadot-node-subsystem-types",
+	"polkadot-node-subsystem-util",
+	"polkadot-omni-node-lib",
+	"polkadot-overseer",
+	"polkadot-rpc",
+	"polkadot-service",
+	"polkadot-statement-distribution",
+	"polkadot-statement-table",
+	"sc-allocator",
+	"sc-authority-discovery",
+	"sc-basic-authorship",
+	"sc-block-builder",
+	"sc-chain-spec",
+	"sc-cli",
+	"sc-client-api",
+	"sc-client-db",
+	"sc-consensus",
+	"sc-consensus-aura",
+	"sc-consensus-babe",
+	"sc-consensus-babe-rpc",
+	"sc-consensus-beefy",
+	"sc-consensus-beefy-rpc",
+	"sc-consensus-epochs",
+	"sc-consensus-grandpa",
+	"sc-consensus-grandpa-rpc",
+	"sc-consensus-manual-seal",
+	"sc-consensus-pow",
+	"sc-consensus-slots",
+	"sc-executor",
+	"sc-executor-common",
+	"sc-executor-polkavm",
+	"sc-executor-wasmtime",
+	"sc-informant",
+	"sc-keystore",
+	"sc-mixnet",
+	"sc-network",
+	"sc-network-common",
+	"sc-network-gossip",
+	"sc-network-light",
+	"sc-network-statement",
+	"sc-network-sync",
+	"sc-network-transactions",
+	"sc-network-types",
+	"sc-offchain",
+	"sc-proposer-metrics",
+	"sc-rpc",
+	"sc-rpc-api",
+	"sc-rpc-server",
+	"sc-rpc-spec-v2",
+	"sc-service",
+	"sc-state-db",
+	"sc-statement-store",
+	"sc-storage-monitor",
+	"sc-sync-state-rpc",
+	"sc-sysinfo",
+	"sc-telemetry",
+	"sc-tracing",
+	"sc-transaction-pool",
+	"sc-transaction-pool-api",
+	"sc-utils",
+	"snowbridge-runtime-test-common",
+	"sp-blockchain",
+	"sp-consensus",
+	"sp-core-hashing",
+	"sp-core-hashing-proc-macro",
+	"sp-database",
+	"sp-maybe-compressed-blob",
+	"sp-panic-handler",
+	"sp-rpc",
+	"staging-chain-spec-builder",
+	"staging-node-inspect",
+	"staging-tracking-allocator",
+	"std",
+	"subkey",
+	"substrate-build-script-utils",
+	"substrate-frame-rpc-support",
+	"substrate-frame-rpc-system",
+	"substrate-prometheus-endpoint",
+	"substrate-rpc-client",
+	"substrate-state-trie-migration-rpc",
+	"substrate-wasm-builder",
+	"tracing-gum",
+	"xcm-emulator",
+	"xcm-simulator",
+]
 tuples-96 = [
 	"frame-support-procedural?/tuples-96",
 	"frame-support?/tuples-96",
@@ -622,7 +988,7 @@ workspace = true
 path = "../cumulus/parachains/runtimes/assets/common"
 default-features = false
 optional = true
-version = "0.19.0"
+version = "0.19.1"
 
 [dependencies.binary-merkle-tree]
 path = "../substrate/utils/binary-merkle-tree"
@@ -670,7 +1036,7 @@ version = "0.19.0"
 path = "../bridges/primitives/runtime"
 default-features = false
 optional = true
-version = "0.19.0"
+version = "0.19.1"
 
 [dependencies.bp-test-utils]
 path = "../bridges/primitives/test-utils"
@@ -700,7 +1066,7 @@ version = "0.12.0"
 path = "../bridges/bin/runtime-common"
 default-features = false
 optional = true
-version = "0.19.0"
+version = "0.19.2"
 
 [dependencies.cumulus-pallet-aura-ext]
 path = "../cumulus/pallets/aura-ext"
@@ -718,7 +1084,7 @@ version = "0.18.0"
 path = "../cumulus/pallets/parachain-system"
 default-features = false
 optional = true
-version = "0.18.0"
+version = "0.18.1"
 
 [dependencies.cumulus-pallet-parachain-system-proc-macro]
 path = "../cumulus/pallets/parachain-system/proc-macro"
@@ -748,7 +1114,7 @@ version = "0.18.0"
 path = "../cumulus/pallets/xcmp-queue"
 default-features = false
 optional = true
-version = "0.18.0"
+version = "0.18.2"
 
 [dependencies.cumulus-ping]
 path = "../cumulus/parachains/pallets/ping"
@@ -784,7 +1150,7 @@ version = "0.11.0"
 path = "../cumulus/primitives/storage-weight-reclaim"
 default-features = false
 optional = true
-version = "9.0.0"
+version = "9.1.0"
 
 [dependencies.cumulus-primitives-timestamp]
 path = "../cumulus/primitives/timestamp"
@@ -796,13 +1162,13 @@ version = "0.17.0"
 path = "../cumulus/primitives/utility"
 default-features = false
 optional = true
-version = "0.18.0"
+version = "0.18.1"
 
 [dependencies.frame-benchmarking]
 path = "../substrate/frame/benchmarking"
 default-features = false
 optional = true
-version = "39.0.0"
+version = "39.1.0"
 
 [dependencies.frame-benchmarking-pallet-pov]
 path = "../substrate/frame/benchmarking/pov"
@@ -814,19 +1180,19 @@ version = "29.0.0"
 path = "../substrate/frame/election-provider-support/solution-type"
 default-features = false
 optional = true
-version = "14.0.1"
+version = "14.0.2"
 
 [dependencies.frame-election-provider-support]
 path = "../substrate/frame/election-provider-support"
 default-features = false
 optional = true
-version = "39.0.0"
+version = "39.0.1"
 
 [dependencies.frame-executive]
 path = "../substrate/frame/executive"
 default-features = false
 optional = true
-version = "39.0.0"
+version = "39.1.1"
 
 [dependencies.frame-metadata-hash-extension]
 path = "../substrate/frame/metadata-hash-extension"
@@ -838,13 +1204,13 @@ version = "0.7.0"
 path = "../substrate/frame/support"
 default-features = false
 optional = true
-version = "39.0.0"
+version = "39.1.0"
 
 [dependencies.frame-support-procedural]
 path = "../substrate/frame/support/procedural"
 default-features = false
 optional = true
-version = "31.0.0"
+version = "31.1.0"
 
 [dependencies.frame-support-procedural-tools-derive]
 path = "../substrate/frame/support/procedural/tools/derive"
@@ -880,61 +1246,61 @@ version = "0.45.0"
 path = "../substrate/frame/alliance"
 default-features = false
 optional = true
-version = "38.0.0"
+version = "38.1.0"
 
 [dependencies.pallet-asset-conversion]
 path = "../substrate/frame/asset-conversion"
 default-features = false
 optional = true
-version = "21.0.0"
+version = "21.1.0"
 
 [dependencies.pallet-asset-conversion-ops]
 path = "../substrate/frame/asset-conversion/ops"
 default-features = false
 optional = true
-version = "0.7.0"
+version = "0.7.1"
 
 [dependencies.pallet-asset-conversion-tx-payment]
 path = "../substrate/frame/transaction-payment/asset-conversion-tx-payment"
 default-features = false
 optional = true
-version = "21.0.0"
+version = "21.1.0"
 
 [dependencies.pallet-asset-rate]
 path = "../substrate/frame/asset-rate"
 default-features = false
 optional = true
-version = "18.0.0"
+version = "18.1.0"
 
 [dependencies.pallet-asset-tx-payment]
 path = "../substrate/frame/transaction-payment/asset-tx-payment"
 default-features = false
 optional = true
-version = "39.0.0"
+version = "39.1.0"
 
 [dependencies.pallet-assets]
 path = "../substrate/frame/assets"
 default-features = false
 optional = true
-version = "41.0.0"
+version = "41.1.0"
 
 [dependencies.pallet-assets-freezer]
 path = "../substrate/frame/assets-freezer"
 default-features = false
 optional = true
-version = "0.6.0"
+version = "0.6.1"
 
 [dependencies.pallet-atomic-swap]
 path = "../substrate/frame/atomic-swap"
 default-features = false
 optional = true
-version = "39.0.0"
+version = "39.1.0"
 
 [dependencies.pallet-aura]
 path = "../substrate/frame/aura"
 default-features = false
 optional = true
-version = "38.0.0"
+version = "38.1.0"
 
 [dependencies.pallet-authority-discovery]
 path = "../substrate/frame/authority-discovery"
@@ -952,7 +1318,7 @@ version = "39.0.0"
 path = "../substrate/frame/babe"
 default-features = false
 optional = true
-version = "39.0.0"
+version = "39.1.0"
 
 [dependencies.pallet-bags-list]
 path = "../substrate/frame/bags-list"
@@ -964,25 +1330,25 @@ version = "38.0.0"
 path = "../substrate/frame/balances"
 default-features = false
 optional = true
-version = "40.0.0"
+version = "40.1.0"
 
 [dependencies.pallet-beefy]
 path = "../substrate/frame/beefy"
 default-features = false
 optional = true
-version = "40.0.0"
+version = "40.1.1"
 
 [dependencies.pallet-beefy-mmr]
 path = "../substrate/frame/beefy-mmr"
 default-features = false
 optional = true
-version = "40.0.0"
+version = "40.1.0"
 
 [dependencies.pallet-bounties]
 path = "../substrate/frame/bounties"
 default-features = false
 optional = true
-version = "38.0.1"
+version = "38.1.0"
 
 [dependencies.pallet-bridge-grandpa]
 path = "../bridges/modules/grandpa"
@@ -994,7 +1360,7 @@ version = "0.19.0"
 path = "../bridges/modules/messages"
 default-features = false
 optional = true
-version = "0.19.0"
+version = "0.19.1"
 
 [dependencies.pallet-bridge-parachains]
 path = "../bridges/modules/parachains"
@@ -1006,7 +1372,7 @@ version = "0.19.0"
 path = "../bridges/modules/relayers"
 default-features = false
 optional = true
-version = "0.19.0"
+version = "0.19.1"
 
 [dependencies.pallet-broker]
 path = "../substrate/frame/broker"
@@ -1018,31 +1384,31 @@ version = "0.18.0"
 path = "../substrate/frame/child-bounties"
 default-features = false
 optional = true
-version = "38.0.0"
+version = "38.1.0"
 
 [dependencies.pallet-collator-selection]
 path = "../cumulus/pallets/collator-selection"
 default-features = false
 optional = true
-version = "20.0.0"
+version = "20.1.0"
 
 [dependencies.pallet-collective]
 path = "../substrate/frame/collective"
 default-features = false
 optional = true
-version = "39.0.0"
+version = "39.1.0"
 
 [dependencies.pallet-collective-content]
 path = "../cumulus/parachains/pallets/collective-content"
 default-features = false
 optional = true
-version = "0.17.0"
+version = "0.17.1"
 
 [dependencies.pallet-contracts]
 path = "../substrate/frame/contracts"
 default-features = false
 optional = true
-version = "39.0.0"
+version = "39.1.0"
 
 [dependencies.pallet-contracts-proc-macro]
 path = "../substrate/frame/contracts/proc-macro"
@@ -1060,7 +1426,7 @@ version = "12.0.1"
 path = "../substrate/frame/conviction-voting"
 default-features = false
 optional = true
-version = "39.0.0"
+version = "39.1.0"
 
 [dependencies.pallet-core-fellowship]
 path = "../substrate/frame/core-fellowship"
@@ -1072,25 +1438,25 @@ version = "23.0.0"
 path = "../substrate/frame/delegated-staking"
 default-features = false
 optional = true
-version = "6.0.0"
+version = "6.1.0"
 
 [dependencies.pallet-democracy]
 path = "../substrate/frame/democracy"
 default-features = false
 optional = true
-version = "39.0.0"
+version = "39.1.0"
 
 [dependencies.pallet-dev-mode]
 path = "../substrate/frame/examples/dev-mode"
 default-features = false
 optional = true
-version = "21.0.0"
+version = "21.1.0"
 
 [dependencies.pallet-election-provider-multi-phase]
 path = "../substrate/frame/election-provider-multi-phase"
 default-features = false
 optional = true
-version = "38.0.0"
+version = "38.2.0"
 
 [dependencies.pallet-election-provider-support-benchmarking]
 path = "../substrate/frame/election-provider-support/benchmarking"
@@ -1102,43 +1468,43 @@ version = "38.0.0"
 path = "../substrate/frame/elections-phragmen"
 default-features = false
 optional = true
-version = "40.0.0"
+version = "40.1.0"
 
 [dependencies.pallet-fast-unstake]
 path = "../substrate/frame/fast-unstake"
 default-features = false
 optional = true
-version = "38.0.0"
+version = "38.1.0"
 
 [dependencies.pallet-glutton]
 path = "../substrate/frame/glutton"
 default-features = false
 optional = true
-version = "25.0.0"
+version = "25.1.0"
 
 [dependencies.pallet-grandpa]
 path = "../substrate/frame/grandpa"
 default-features = false
 optional = true
-version = "39.0.0"
+version = "39.1.0"
 
 [dependencies.pallet-identity]
 path = "../substrate/frame/identity"
 default-features = false
 optional = true
-version = "39.0.0"
+version = "39.1.0"
 
 [dependencies.pallet-im-online]
 path = "../substrate/frame/im-online"
 default-features = false
 optional = true
-version = "38.0.0"
+version = "38.1.0"
 
 [dependencies.pallet-indices]
 path = "../substrate/frame/indices"
 default-features = false
 optional = true
-version = "39.0.0"
+version = "39.1.0"
 
 [dependencies.pallet-insecure-randomness-collective-flip]
 path = "../substrate/frame/insecure-randomness-collective-flip"
@@ -1150,7 +1516,7 @@ version = "27.0.0"
 path = "../substrate/frame/lottery"
 default-features = false
 optional = true
-version = "39.0.0"
+version = "39.1.0"
 
 [dependencies.pallet-membership]
 path = "../substrate/frame/membership"
@@ -1168,7 +1534,7 @@ version = "42.0.0"
 path = "../substrate/frame/migrations"
 default-features = false
 optional = true
-version = "9.0.0"
+version = "9.1.0"
 
 [dependencies.pallet-mixnet]
 path = "../substrate/frame/mixnet"
@@ -1186,19 +1552,19 @@ version = "39.0.0"
 path = "../substrate/frame/multisig"
 default-features = false
 optional = true
-version = "39.0.0"
+version = "39.1.1"
 
 [dependencies.pallet-nft-fractionalization]
 path = "../substrate/frame/nft-fractionalization"
 default-features = false
 optional = true
-version = "22.0.0"
+version = "22.1.0"
 
 [dependencies.pallet-nfts]
 path = "../substrate/frame/nfts"
 default-features = false
 optional = true
-version = "33.0.0"
+version = "33.1.0"
 
 [dependencies.pallet-nfts-runtime-api]
 path = "../substrate/frame/nfts/runtime-api"
@@ -1210,7 +1576,7 @@ version = "25.0.0"
 path = "../substrate/frame/nis"
 default-features = false
 optional = true
-version = "39.0.0"
+version = "39.1.0"
 
 [dependencies.pallet-node-authorization]
 path = "../substrate/frame/node-authorization"
@@ -1222,19 +1588,19 @@ version = "39.0.0"
 path = "../substrate/frame/nomination-pools"
 default-features = false
 optional = true
-version = "37.0.0"
+version = "37.0.2"
 
 [dependencies.pallet-nomination-pools-benchmarking]
 path = "../substrate/frame/nomination-pools/benchmarking"
 default-features = false
 optional = true
-version = "37.0.0"
+version = "37.1.0"
 
 [dependencies.pallet-nomination-pools-runtime-api]
 path = "../substrate/frame/nomination-pools/runtime-api"
 default-features = false
 optional = true
-version = "35.0.0"
+version = "35.0.1"
 
 [dependencies.pallet-offences]
 path = "../substrate/frame/offences"
@@ -1246,7 +1612,7 @@ version = "38.0.0"
 path = "../substrate/frame/offences/benchmarking"
 default-features = false
 optional = true
-version = "39.0.0"
+version = "39.1.0"
 
 [dependencies.pallet-paged-list]
 path = "../substrate/frame/paged-list"
@@ -1258,19 +1624,19 @@ version = "0.17.0"
 path = "../substrate/frame/parameters"
 default-features = false
 optional = true
-version = "0.10.0"
+version = "0.10.1"
 
 [dependencies.pallet-preimage]
 path = "../substrate/frame/preimage"
 default-features = false
 optional = true
-version = "39.0.0"
+version = "39.1.0"
 
 [dependencies.pallet-proxy]
 path = "../substrate/frame/proxy"
 default-features = false
 optional = true
-version = "39.0.0"
+version = "39.1.0"
 
 [dependencies.pallet-ranked-collective]
 path = "../substrate/frame/ranked-collective"
@@ -1282,13 +1648,13 @@ version = "39.0.0"
 path = "../substrate/frame/recovery"
 default-features = false
 optional = true
-version = "39.0.0"
+version = "39.1.0"
 
 [dependencies.pallet-referenda]
 path = "../substrate/frame/referenda"
 default-features = false
 optional = true
-version = "39.0.0"
+version = "39.1.0"
 
 [dependencies.pallet-remark]
 path = "../substrate/frame/remark"
@@ -1296,35 +1662,11 @@ default-features = false
 optional = true
 version = "39.0.0"
 
-[dependencies.pallet-revive]
-path = "../substrate/frame/revive"
-default-features = false
-optional = true
-version = "0.3.0"
-
-[dependencies.pallet-revive-fixtures]
-path = "../substrate/frame/revive/fixtures"
-default-features = false
-optional = true
-version = "0.3.0"
-
-[dependencies.pallet-revive-proc-macro]
-path = "../substrate/frame/revive/proc-macro"
-default-features = false
-optional = true
-version = "0.1.2"
-
-[dependencies.pallet-revive-uapi]
-path = "../substrate/frame/revive/uapi"
-default-features = false
-optional = true
-version = "0.2.0"
-
 [dependencies.pallet-root-offences]
 path = "../substrate/frame/root-offences"
 default-features = false
 optional = true
-version = "36.0.0"
+version = "36.1.0"
 
 [dependencies.pallet-root-testing]
 path = "../substrate/frame/root-testing"
@@ -1348,13 +1690,13 @@ version = "24.0.0"
 path = "../substrate/frame/scheduler"
 default-features = false
 optional = true
-version = "40.0.0"
+version = "40.2.0"
 
 [dependencies.pallet-scored-pool]
 path = "../substrate/frame/scored-pool"
 default-features = false
 optional = true
-version = "39.0.0"
+version = "39.1.0"
 
 [dependencies.pallet-session]
 path = "../substrate/frame/session"
@@ -1366,7 +1708,7 @@ version = "39.0.0"
 path = "../substrate/frame/session/benchmarking"
 default-features = false
 optional = true
-version = "39.0.0"
+version = "39.1.0"
 
 [dependencies.pallet-skip-feeless-payment]
 path = "../substrate/frame/transaction-payment/skip-feeless-payment"
@@ -1378,13 +1720,13 @@ version = "14.1.0"
 path = "../substrate/frame/society"
 default-features = false
 optional = true
-version = "39.0.0"
+version = "39.1.0"
 
 [dependencies.pallet-staking]
 path = "../substrate/frame/staking"
 default-features = false
 optional = true
-version = "39.0.1"
+version = "39.1.0"
 
 [dependencies.pallet-staking-reward-curve]
 path = "../substrate/frame/staking/reward-curve"
@@ -1408,13 +1750,13 @@ version = "25.0.0"
 path = "../substrate/frame/state-trie-migration"
 default-features = false
 optional = true
-version = "43.0.0"
+version = "43.1.0"
 
 [dependencies.pallet-statement]
 path = "../substrate/frame/statement"
 default-features = false
 optional = true
-version = "21.0.0"
+version = "21.1.0"
 
 [dependencies.pallet-sudo]
 path = "../substrate/frame/sudo"
@@ -1432,13 +1774,13 @@ version = "38.0.0"
 path = "../substrate/frame/tips"
 default-features = false
 optional = true
-version = "38.0.0"
+version = "38.1.0"
 
 [dependencies.pallet-transaction-payment]
 path = "../substrate/frame/transaction-payment"
 default-features = false
 optional = true
-version = "39.0.0"
+version = "39.1.0"
 
 [dependencies.pallet-transaction-payment-rpc-runtime-api]
 path = "../substrate/frame/transaction-payment/rpc/runtime-api"
@@ -1450,13 +1792,13 @@ version = "39.0.0"
 path = "../substrate/frame/transaction-storage"
 default-features = false
 optional = true
-version = "38.0.0"
+version = "38.1.0"
 
 [dependencies.pallet-treasury]
 path = "../substrate/frame/treasury"
 default-features = false
 optional = true
-version = "38.0.0"
+version = "38.1.0"
 
 [dependencies.pallet-tx-pause]
 path = "../substrate/frame/tx-pause"
@@ -1468,49 +1810,49 @@ version = "20.0.0"
 path = "../substrate/frame/uniques"
 default-features = false
 optional = true
-version = "39.0.0"
+version = "39.1.0"
 
 [dependencies.pallet-utility]
 path = "../substrate/frame/utility"
 default-features = false
 optional = true
-version = "39.0.0"
+version = "39.1.0"
 
 [dependencies.pallet-verify-signature]
 path = "../substrate/frame/verify-signature"
 default-features = false
 optional = true
-version = "0.2.0"
+version = "0.2.1"
 
 [dependencies.pallet-vesting]
 path = "../substrate/frame/vesting"
 default-features = false
 optional = true
-version = "39.0.0"
+version = "39.1.0"
 
 [dependencies.pallet-whitelist]
 path = "../substrate/frame/whitelist"
 default-features = false
 optional = true
-version = "38.0.0"
+version = "38.1.0"
 
 [dependencies.pallet-xcm]
 path = "../polkadot/xcm/pallet-xcm"
 default-features = false
 optional = true
-version = "18.0.0"
+version = "18.1.1"
 
 [dependencies.pallet-xcm-benchmarks]
 path = "../polkadot/xcm/pallet-xcm-benchmarks"
 default-features = false
 optional = true
-version = "18.0.0"
+version = "18.1.1"
 
 [dependencies.pallet-xcm-bridge-hub]
 path = "../bridges/modules/xcm-bridge-hub"
 default-features = false
 optional = true
-version = "0.14.0"
+version = "0.14.3"
 
 [dependencies.pallet-xcm-bridge-hub-router]
 path = "../bridges/modules/xcm-bridge-hub-router"
@@ -1540,13 +1882,13 @@ version = "15.0.0"
 path = "../polkadot/primitives"
 default-features = false
 optional = true
-version = "17.0.0"
+version = "17.1.0"
 
 [dependencies.polkadot-runtime-common]
 path = "../polkadot/runtime/common"
 default-features = false
 optional = true
-version = "18.0.0"
+version = "18.1.0"
 
 [dependencies.polkadot-runtime-metrics]
 path = "../polkadot/runtime/metrics"
@@ -1558,13 +1900,13 @@ version = "18.0.0"
 path = "../polkadot/runtime/parachains"
 default-features = false
 optional = true
-version = "18.0.1"
+version = "18.1.0"
 
 [dependencies.polkadot-sdk-frame]
 path = "../substrate/frame"
 default-features = false
 optional = true
-version = "0.8.0"
+version = "0.8.1"
 
 [dependencies.sc-chain-spec-derive]
 path = "../substrate/client/chain-spec/derive"
@@ -1588,13 +1930,13 @@ version = "16.0.0"
 path = "../bridges/snowbridge/primitives/beacon"
 default-features = false
 optional = true
-version = "0.12.0"
+version = "0.12.1"
 
 [dependencies.snowbridge-core]
 path = "../bridges/snowbridge/primitives/core"
 default-features = false
 optional = true
-version = "0.12.0"
+version = "0.12.2"
 
 [dependencies.snowbridge-ethereum]
 path = "../bridges/snowbridge/primitives/ethereum"
@@ -1618,7 +1960,7 @@ version = "0.12.0"
 path = "../bridges/snowbridge/pallets/ethereum-client"
 default-features = false
 optional = true
-version = "0.12.0"
+version = "0.12.1"
 
 [dependencies.snowbridge-pallet-ethereum-client-fixtures]
 path = "../bridges/snowbridge/pallets/ethereum-client/fixtures"
@@ -1630,7 +1972,7 @@ version = "0.20.0"
 path = "../bridges/snowbridge/pallets/inbound-queue"
 default-features = false
 optional = true
-version = "0.12.0"
+version = "0.12.1"
 
 [dependencies.snowbridge-pallet-inbound-queue-fixtures]
 path = "../bridges/snowbridge/pallets/inbound-queue/fixtures"
@@ -1642,13 +1984,13 @@ version = "0.20.1"
 path = "../bridges/snowbridge/pallets/outbound-queue"
 default-features = false
 optional = true
-version = "0.12.0"
+version = "0.12.1"
 
 [dependencies.snowbridge-pallet-system]
 path = "../bridges/snowbridge/pallets/system"
 default-features = false
 optional = true
-version = "0.12.0"
+version = "0.12.2"
 
 [dependencies.snowbridge-router-primitives]
 path = "../bridges/snowbridge/primitives/router"
@@ -1678,7 +2020,7 @@ version = "35.0.0"
 path = "../substrate/primitives/api/proc-macro"
 default-features = false
 optional = true
-version = "21.0.0"
+version = "21.0.2"
 
 [dependencies.sp-application-crypto]
 path = "../substrate/primitives/application-crypto"
@@ -1792,7 +2134,7 @@ version = "35.0.0"
 path = "../substrate/primitives/io"
 default-features = false
 optional = true
-version = "39.0.0"
+version = "39.0.1"
 
 [dependencies.sp-keyring]
 path = "../substrate/primitives/keyring"
@@ -1828,7 +2170,7 @@ version = "35.0.0"
 path = "../substrate/primitives/npos-elections"
 default-features = false
 optional = true
-version = "35.0.0"
+version = "35.1.0"
 
 [dependencies.sp-offchain]
 path = "../substrate/primitives/offchain"
@@ -1954,19 +2296,19 @@ version = "0.18.0"
 path = "../polkadot/xcm"
 default-features = false
 optional = true
-version = "15.0.1"
+version = "15.1.0"
 
 [dependencies.staging-xcm-builder]
 path = "../polkadot/xcm/xcm-builder"
 default-features = false
 optional = true
-version = "18.0.0"
+version = "18.2.1"
 
 [dependencies.staging-xcm-executor]
 path = "../polkadot/xcm/xcm-executor"
 default-features = false
 optional = true
-version = "18.0.0"
+version = "18.0.3"
 
 [dependencies.substrate-bip39]
 path = "../substrate/utils/substrate-bip39"
@@ -1990,31 +2332,31 @@ version = "5.0.0"
 path = "../polkadot/xcm/procedural"
 default-features = false
 optional = true
-version = "11.0.0"
+version = "11.0.1"
 
 [dependencies.xcm-runtime-apis]
 path = "../polkadot/xcm/xcm-runtime-apis"
 default-features = false
 optional = true
-version = "0.5.0"
+version = "0.5.3"
 
 [dependencies.asset-test-utils]
 path = "../cumulus/parachains/runtimes/assets/test-utils"
 default-features = false
 optional = true
-version = "21.0.0"
+version = "21.0.2"
 
 [dependencies.bridge-hub-test-utils]
 path = "../cumulus/parachains/runtimes/bridge-hubs/test-utils"
 default-features = false
 optional = true
-version = "0.21.0"
+version = "0.21.1"
 
 [dependencies.cumulus-client-cli]
 path = "../cumulus/client/cli"
 default-features = false
 optional = true
-version = "0.21.0"
+version = "0.21.1"
 
 [dependencies.cumulus-client-collator]
 path = "../cumulus/client/collator"
@@ -2086,13 +2428,13 @@ version = "0.21.0"
 path = "../cumulus/client/relay-chain-minimal-node"
 default-features = false
 optional = true
-version = "0.22.0"
+version = "0.22.2"
 
 [dependencies.cumulus-relay-chain-rpc-interface]
 path = "../cumulus/client/relay-chain-rpc-interface"
 default-features = false
 optional = true
-version = "0.21.0"
+version = "0.21.2"
 
 [dependencies.cumulus-test-relay-sproof-builder]
 path = "../cumulus/test/relay-sproof-builder"
@@ -2104,7 +2446,7 @@ version = "0.17.0"
 path = "../cumulus/parachains/integration-tests/emulated/common"
 default-features = false
 optional = true
-version = "19.0.0"
+version = "19.1.0"
 
 [dependencies.fork-tree]
 path = "../substrate/utils/fork-tree"
@@ -2116,7 +2458,7 @@ version = "13.0.1"
 path = "../substrate/utils/frame/benchmarking-cli"
 default-features = false
 optional = true
-version = "46.0.0"
+version = "46.2.0"
 
 [dependencies.frame-remote-externalities]
 path = "../substrate/utils/frame/remote-externalities"
@@ -2154,18 +2496,6 @@ default-features = false
 optional = true
 version = "15.0.0"
 
-[dependencies.pallet-revive-eth-rpc]
-path = "../substrate/frame/revive/rpc"
-default-features = false
-optional = true
-version = "0.2.0"
-
-[dependencies.pallet-revive-mock-network]
-path = "../substrate/frame/revive/mock-network"
-default-features = false
-optional = true
-version = "0.3.0"
-
 [dependencies.pallet-transaction-payment-rpc]
 path = "../substrate/frame/transaction-payment/rpc"
 default-features = false
@@ -2176,7 +2506,7 @@ version = "42.0.0"
 path = "../cumulus/parachains/runtimes/test-utils"
 default-features = false
 optional = true
-version = "20.0.0"
+version = "20.0.2"
 
 [dependencies.polkadot-approval-distribution]
 path = "../polkadot/node/network/approval-distribution"
@@ -2206,7 +2536,7 @@ version = "21.0.0"
 path = "../polkadot/cli"
 default-features = false
 optional = true
-version = "22.0.0"
+version = "22.0.1"
 
 [dependencies.polkadot-collator-protocol]
 path = "../polkadot/node/network/collator-protocol"
@@ -2218,7 +2548,7 @@ version = "21.0.0"
 path = "../polkadot/node/network/dispute-distribution"
 default-features = false
 optional = true
-version = "21.0.0"
+version = "21.1.0"
 
 [dependencies.polkadot-erasure-coding]
 path = "../polkadot/erasure-coding"
@@ -2278,7 +2608,7 @@ version = "21.0.0"
 path = "../polkadot/node/core/candidate-validation"
 default-features = false
 optional = true
-version = "21.0.0"
+version = "21.0.1"
 
 [dependencies.polkadot-node-core-chain-api]
 path = "../polkadot/node/core/chain-api"
@@ -2320,7 +2650,7 @@ version = "21.0.0"
 path = "../polkadot/node/core/pvf"
 default-features = false
 optional = true
-version = "21.0.0"
+version = "21.0.1"
 
 [dependencies.polkadot-node-core-pvf-checker]
 path = "../polkadot/node/core/pvf-checker"
@@ -2332,7 +2662,7 @@ version = "21.0.0"
 path = "../polkadot/node/core/pvf/common"
 default-features = false
 optional = true
-version = "17.0.0"
+version = "17.0.1"
 
 [dependencies.polkadot-node-core-pvf-execute-worker]
 path = "../polkadot/node/core/pvf/execute-worker"
@@ -2344,19 +2674,19 @@ version = "17.0.0"
 path = "../polkadot/node/core/pvf/prepare-worker"
 default-features = false
 optional = true
-version = "17.0.0"
+version = "17.0.1"
 
 [dependencies.polkadot-node-core-runtime-api]
 path = "../polkadot/node/core/runtime-api"
 default-features = false
 optional = true
-version = "21.0.0"
+version = "21.0.1"
 
 [dependencies.polkadot-node-metrics]
 path = "../polkadot/node/metrics"
 default-features = false
 optional = true
-version = "21.0.0"
+version = "21.1.0"
 
 [dependencies.polkadot-node-network-protocol]
 path = "../polkadot/node/network/protocol"
@@ -2368,7 +2698,7 @@ version = "21.0.0"
 path = "../polkadot/node/primitives"
 default-features = false
 optional = true
-version = "17.0.0"
+version = "17.0.1"
 
 [dependencies.polkadot-node-subsystem]
 path = "../polkadot/node/subsystem"
@@ -2380,25 +2710,25 @@ version = "21.0.0"
 path = "../polkadot/node/subsystem-types"
 default-features = false
 optional = true
-version = "21.0.0"
+version = "21.0.1"
 
 [dependencies.polkadot-node-subsystem-util]
 path = "../polkadot/node/subsystem-util"
 default-features = false
 optional = true
-version = "21.0.0"
+version = "21.1.0"
 
 [dependencies.polkadot-omni-node-lib]
 path = "../cumulus/polkadot-omni-node/lib"
 default-features = false
 optional = true
-version = "0.4.0"
+version = "0.4.2"
 
 [dependencies.polkadot-overseer]
 path = "../polkadot/node/overseer"
 default-features = false
 optional = true
-version = "21.0.0"
+version = "21.1.0"
 
 [dependencies.polkadot-rpc]
 path = "../polkadot/rpc"
@@ -2410,13 +2740,13 @@ version = "22.0.0"
 path = "../polkadot/node/service"
 default-features = false
 optional = true
-version = "22.0.0"
+version = "22.1.0"
 
 [dependencies.polkadot-statement-distribution]
 path = "../polkadot/node/network/statement-distribution"
 default-features = false
 optional = true
-version = "21.0.0"
+version = "21.1.0"
 
 [dependencies.polkadot-statement-table]
 path = "../polkadot/statement-table"
@@ -2458,7 +2788,7 @@ version = "41.0.0"
 path = "../substrate/client/cli"
 default-features = false
 optional = true
-version = "0.50.0"
+version = "0.50.1"
 
 [dependencies.sc-client-api]
 path = "../substrate/client/api"
@@ -2470,7 +2800,7 @@ version = "38.0.0"
 path = "../substrate/client/db"
 default-features = false
 optional = true
-version = "0.45.0"
+version = "0.45.1"
 
 [dependencies.sc-consensus]
 path = "../substrate/client/consensus/common"
@@ -2590,7 +2920,7 @@ version = "0.18.0"
 path = "../substrate/client/network"
 default-features = false
 optional = true
-version = "0.48.0"
+version = "0.48.4"
 
 [dependencies.sc-network-common]
 path = "../substrate/client/network/common"
@@ -2632,7 +2962,7 @@ version = "0.47.0"
 path = "../substrate/client/network/types"
 default-features = false
 optional = true
-version = "0.15.0"
+version = "0.15.2"
 
 [dependencies.sc-offchain]
 path = "../substrate/client/offchain"
@@ -2722,13 +3052,13 @@ version = "38.0.0"
 path = "../substrate/client/transaction-pool"
 default-features = false
 optional = true
-version = "38.0.0"
+version = "38.1.0"
 
 [dependencies.sc-transaction-pool-api]
 path = "../substrate/client/transaction-pool/api"
 default-features = false
 optional = true
-version = "38.0.0"
+version = "38.1.0"
 
 [dependencies.sc-utils]
 path = "../substrate/client/utils"
@@ -2854,7 +3184,7 @@ version = "41.0.0"
 path = "../substrate/utils/wasm-builder"
 default-features = false
 optional = true
-version = "25.0.0"
+version = "25.0.1"
 
 [dependencies.tracing-gum]
 path = "../polkadot/node/gum"
@@ -2866,13 +3196,13 @@ version = "17.0.0"
 path = "../cumulus/xcm/xcm-emulator"
 default-features = false
 optional = true
-version = "0.17.1"
+version = "0.17.2"
 
 [dependencies.xcm-simulator]
 path = "../polkadot/xcm/xcm-simulator"
 default-features = false
 optional = true
-version = "18.0.0"
+version = "18.1.0"
 
 [package.metadata.docs.rs]
 features = ["node", "runtime-full"]

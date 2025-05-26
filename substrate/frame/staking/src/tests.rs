@@ -26,6 +26,7 @@ use frame_election_provider_support::{
 use frame_support::{
 	assert_noop, assert_ok, assert_storage_noop,
 	dispatch::{extract_actual_weight, GetDispatchInfo, WithPostDispatchInfo},
+	hypothetically,
 	pallet_prelude::*,
 	traits::{Currency, Get, ReservableCurrency},
 };
@@ -39,7 +40,7 @@ use sp_runtime::{
 };
 use sp_staking::{
 	offence::{OffenceDetails, OnOffenceHandler},
-	SessionIndex,
+	SessionIndex, Stake, StakingInterface, StakingUnchecked,
 };
 use substrate_test_utils::assert_eq_uvec;
 
@@ -5111,6 +5112,208 @@ fn on_finalize_weight_is_nonzero() {
 	})
 }
 
+#[test]
+fn restricted_accounts_can_only_withdraw() {
+	ExtBuilder::default().build_and_execute(|| {
+		start_active_era(1);
+		// alice is a non blacklisted account.
+		let alice = 301;
+		let _ = Balances::make_free_balance_be(&alice, 500);
+		// alice can bond
+		assert_ok!(Staking::bond(RuntimeOrigin::signed(alice), 100, RewardDestination::Staked));
+		// and bob is a blacklisted account
+		let bob = 302;
+		let _ = Balances::make_free_balance_be(&bob, 500);
+		restrict(&bob);
+
+		// Bob cannot bond
+		assert_noop!(
+			Staking::bond(RuntimeOrigin::signed(bob), 100, RewardDestination::Staked,),
+			Error::<Test>::BoundNotMet
+		);
+
+		// alice is blacklisted now and cannot bond anymore
+		restrict(&alice);
+		assert_noop!(
+			Staking::bond_extra(RuntimeOrigin::signed(alice), 100),
+			Error::<Test>::BoundNotMet
+		);
+		// but she can unbond her existing bond
+		assert_ok!(Staking::unbond(RuntimeOrigin::signed(alice), 100));
+
+		// she cannot rebond the unbonded amount
+		start_active_era(2);
+		assert_noop!(Staking::rebond(RuntimeOrigin::signed(alice), 50), Error::<Test>::BoundNotMet);
+
+		// move to era when alice fund can be withdrawn
+		start_active_era(4);
+		// alice can withdraw now
+		assert_ok!(Staking::withdraw_unbonded(RuntimeOrigin::signed(alice), 0));
+		// she still cannot bond
+		assert_noop!(
+			Staking::bond(RuntimeOrigin::signed(alice), 100, RewardDestination::Staked,),
+			Error::<Test>::BoundNotMet
+		);
+
+		// bob is removed from restrict list
+		remove_from_restrict_list(&bob);
+		// bob can bond now
+		assert_ok!(Staking::bond(RuntimeOrigin::signed(bob), 100, RewardDestination::Staked));
+		// and bond extra
+		assert_ok!(Staking::bond_extra(RuntimeOrigin::signed(bob), 100));
+
+		start_active_era(6);
+		// unbond also works.
+		assert_ok!(Staking::unbond(RuntimeOrigin::signed(bob), 100));
+		// bob can withdraw as well.
+		start_active_era(9);
+		assert_ok!(Staking::withdraw_unbonded(RuntimeOrigin::signed(bob), 0));
+	})
+}
+
+#[test]
+fn permissionless_withdraw_overstake() {
+	ExtBuilder::default().build_and_execute(|| {
+		// Given Alice, Bob, Charlie and Dave with some funds.
+		let alice = 301;
+		let bob = 302;
+		let charlie = 303;
+		let dave = 304;
+		let eve = 305;
+		let _ = Balances::make_free_balance_be(&alice, 200);
+		let _ = Balances::make_free_balance_be(&bob, 200);
+		let _ = Balances::make_free_balance_be(&charlie, 200);
+		let _ = Balances::make_free_balance_be(&dave, 200);
+		let _ = Balances::make_free_balance_be(&eve, 200);
+
+		// AND: except Alice, all of them have some funds reserved by another pallet.
+		assert_ok!(Balances::reserve(&bob, 100));
+		assert_ok!(Balances::reserve(&charlie, 100));
+		assert_ok!(Balances::reserve(&dave, 100));
+		assert_ok!(Balances::reserve(&eve, 199));
+
+		// WHEN: they are fully staked with rest of their funds.
+		assert_ok!(Staking::bond(RuntimeOrigin::signed(alice), 200, RewardDestination::Staked));
+		assert_ok!(Staking::bond(RuntimeOrigin::signed(bob), 100, RewardDestination::Staked));
+		assert_ok!(Staking::bond(RuntimeOrigin::signed(charlie), 100, RewardDestination::Staked));
+		assert_ok!(Staking::bond(RuntimeOrigin::signed(dave), 100, RewardDestination::Staked));
+
+		// AND: charlie & dave are partially unbonding.
+		assert_ok!(Staking::unbond(RuntimeOrigin::signed(charlie), 90));
+		assert_ok!(Staking::unbond(RuntimeOrigin::signed(dave), 10));
+
+		// AND: eve joins as a virtual staker
+		assert_ok!(<Staking as StakingUnchecked>::virtual_bond(&eve, 200, &alice));
+
+		System::reset_events();
+
+		// Eve can not withdraw, because it is a virtual staker
+		assert_noop!(
+			Staking::withdraw_overstake(RuntimeOrigin::signed(1), eve),
+			Error::<Test>::VirtualStakerNotAllowed
+		);
+
+		// THEN Alice cannot transfer any funds out of her account.
+		assert_noop!(
+			Balances::transfer_allow_death(RuntimeOrigin::signed(alice), 1, 1),
+			TokenError::Frozen,
+		);
+
+		// Bob can transfer out all their staked funds aside from ED.
+		assert_ok!(Balances::transfer_allow_death(RuntimeOrigin::signed(bob), 1, 99));
+
+		// hypothetically Dave & Charlie also can transfer out all their staked funds aside from ED.
+		hypothetically!({
+			assert_ok!(Balances::transfer_allow_death(RuntimeOrigin::signed(charlie), 1, 99));
+			assert_ok!(Balances::transfer_allow_death(RuntimeOrigin::signed(dave), 1, 99));
+		});
+
+		// We withdraw only a part of it for the test.
+		assert_ok!(Balances::transfer_allow_death(RuntimeOrigin::signed(charlie), 1, 50));
+		assert_ok!(Balances::transfer_allow_death(RuntimeOrigin::signed(dave), 1, 50));
+
+		// ---
+		// GIVEN: Now Alice has no over-stake.
+		let alice_free_bal = Balances::free_balance(&alice);
+		assert_eq!(alice_free_bal, 200);
+		assert_eq!(
+			<Staking as StakingInterface>::stake(&alice).unwrap(),
+			Stake { total: 200, active: 200 }
+		);
+
+		// THEN: permissionlessly withdrawing overstake fails.
+		assert_noop!(
+			Staking::withdraw_overstake(RuntimeOrigin::signed(1), alice),
+			Error::<Test>::BoundNotMet
+		);
+
+		// ---
+		// GIVEN: Bob is overstaked with no partial unbonding chunks.
+		let bob_free_bal = Balances::free_balance(&bob);
+		assert_eq!(bob_free_bal, 1);
+		assert_eq!(
+			<Staking as StakingInterface>::stake(&bob).unwrap(),
+			Stake { total: 100, active: 100 }
+		);
+
+		// WHEN: permissionlessly withdrawing overstake.
+		assert_ok!(Staking::withdraw_overstake(RuntimeOrigin::signed(1), bob));
+
+		// THEN: Bob's stake is corrected.
+		assert_eq!(
+			<Staking as StakingInterface>::stake(&bob).unwrap(),
+			Stake { total: 100 - 99, active: 100 - 99 }
+		);
+
+		// ---
+		// GIVEN: Charlie is overstaked with partial unbonding chunks.
+		let charlie_free_bal = Balances::free_balance(&charlie);
+		assert_eq!(charlie_free_bal, 50);
+		assert_eq!(
+			<Staking as StakingInterface>::stake(&charlie).unwrap(),
+			Stake { total: 100, active: 100 - 90 }
+		);
+
+		// WHEN: permissionlessly withdrawing overstake.
+		assert_ok!(Staking::withdraw_overstake(RuntimeOrigin::signed(1), charlie));
+
+		// THEN: Charlie's stake is corrected and overstake is taken from both active stake and
+		// unbonding chunks.
+		// (Note: Unlocking chunks are not explicitly checked here but the consistency is checked
+		// as try state check at the end of the test.)
+		assert_eq!(
+			<Staking as StakingInterface>::stake(&charlie).unwrap(),
+			Stake { total: 100 - 50, active: 0 }
+		);
+
+		// ---
+		// GIVEN: Dave is overstaked with partial unbonding chunks.
+		let dave_free_bal = Balances::free_balance(&dave);
+		assert_eq!(dave_free_bal, 50);
+		assert_eq!(
+			<Staking as StakingInterface>::stake(&dave).unwrap(),
+			Stake { total: 100, active: 100 - 10 }
+		);
+
+		// WHEN: permissionlessly withdrawing overstake.
+		assert_ok!(Staking::withdraw_overstake(RuntimeOrigin::signed(1), dave));
+
+		// THEN: Dave's stake is corrected and overstake is taken from active stake.
+		assert_eq!(
+			<Staking as StakingInterface>::stake(&dave).unwrap(),
+			Stake { total: 100 - 50, active: 90 - 50 }
+		);
+
+		assert_eq!(
+			staking_events_since_last_call(),
+			vec![
+				Event::Withdrawn { stash: bob, amount: 99 },
+				Event::Withdrawn { stash: charlie, amount: 50 },
+				Event::Withdrawn { stash: dave, amount: 50 }
+			]
+		);
+	});
+}
 mod election_data_provider {
 	use super::*;
 	use frame_election_provider_support::ElectionDataProvider;
@@ -6186,240 +6389,248 @@ fn force_apply_min_commission_works() {
 
 #[test]
 fn proportional_slash_stop_slashing_if_remaining_zero() {
-	let c = |era, value| UnlockChunk::<Balance> { era, value };
+	ExtBuilder::default().build_and_execute(|| {
+		let c = |era, value| UnlockChunk::<Balance> { era, value };
 
-	// we have some chunks, but they are not affected.
-	let unlocking = bounded_vec![c(1, 10), c(2, 10)];
+		// we have some chunks, but they are not affected.
+		let unlocking = bounded_vec![c(1, 10), c(2, 10)];
 
-	// Given
-	let mut ledger = StakingLedger::<Test>::new(123, 20);
-	ledger.total = 40;
-	ledger.unlocking = unlocking;
+		// Given
+		let mut ledger = StakingLedger::<Test>::new(123, 20);
+		ledger.total = 40;
+		ledger.unlocking = unlocking;
 
-	assert_eq!(BondingDuration::get(), 3);
+		assert_eq!(BondingDuration::get(), 3);
 
-	// should not slash more than the amount requested, by accidentally slashing the first chunk.
-	assert_eq!(ledger.slash(18, 1, 0), 18);
+		// should not slash more than the amount requested, by accidentally slashing the first
+		// chunk.
+		assert_eq!(ledger.slash(18, 1, 0), 18);
+	});
 }
 
 #[test]
 fn proportional_ledger_slash_works() {
-	let c = |era, value| UnlockChunk::<Balance> { era, value };
-	// Given
-	let mut ledger = StakingLedger::<Test>::new(123, 10);
-	assert_eq!(BondingDuration::get(), 3);
+	ExtBuilder::default().build_and_execute(|| {
+		let c = |era, value| UnlockChunk::<Balance> { era, value };
+		// Given
+		let mut ledger = StakingLedger::<Test>::new(123, 10);
+		assert_eq!(BondingDuration::get(), 3);
 
-	// When we slash a ledger with no unlocking chunks
-	assert_eq!(ledger.slash(5, 1, 0), 5);
-	// Then
-	assert_eq!(ledger.total, 5);
-	assert_eq!(ledger.active, 5);
-	assert_eq!(LedgerSlashPerEra::get().0, 5);
-	assert_eq!(LedgerSlashPerEra::get().1, Default::default());
+		// When we slash a ledger with no unlocking chunks
+		assert_eq!(ledger.slash(5, 1, 0), 5);
+		// Then
+		assert_eq!(ledger.total, 5);
+		assert_eq!(ledger.active, 5);
+		assert_eq!(LedgerSlashPerEra::get().0, 5);
+		assert_eq!(LedgerSlashPerEra::get().1, Default::default());
 
-	// When we slash a ledger with no unlocking chunks and the slash amount is greater then the
-	// total
-	assert_eq!(ledger.slash(11, 1, 0), 5);
-	// Then
-	assert_eq!(ledger.total, 0);
-	assert_eq!(ledger.active, 0);
-	assert_eq!(LedgerSlashPerEra::get().0, 0);
-	assert_eq!(LedgerSlashPerEra::get().1, Default::default());
+		// When we slash a ledger with no unlocking chunks and the slash amount is greater then the
+		// total
+		assert_eq!(ledger.slash(11, 1, 0), 5);
+		// Then
+		assert_eq!(ledger.total, 0);
+		assert_eq!(ledger.active, 0);
+		assert_eq!(LedgerSlashPerEra::get().0, 0);
+		assert_eq!(LedgerSlashPerEra::get().1, Default::default());
 
-	// Given
-	ledger.unlocking = bounded_vec![c(4, 10), c(5, 10)];
-	ledger.total = 2 * 10;
-	ledger.active = 0;
-	// When all the chunks overlap with the slash eras
-	assert_eq!(ledger.slash(20, 0, 0), 20);
-	// Then
-	assert_eq!(ledger.unlocking, vec![]);
-	assert_eq!(ledger.total, 0);
-	assert_eq!(LedgerSlashPerEra::get().0, 0);
-	assert_eq!(LedgerSlashPerEra::get().1, BTreeMap::from([(4, 0), (5, 0)]));
+		// Given
+		ledger.unlocking = bounded_vec![c(4, 10), c(5, 10)];
+		ledger.total = 2 * 10;
+		ledger.active = 0;
+		// When all the chunks overlap with the slash eras
+		assert_eq!(ledger.slash(20, 0, 0), 20);
+		// Then
+		assert_eq!(ledger.unlocking, vec![]);
+		assert_eq!(ledger.total, 0);
+		assert_eq!(LedgerSlashPerEra::get().0, 0);
+		assert_eq!(LedgerSlashPerEra::get().1, BTreeMap::from([(4, 0), (5, 0)]));
 
-	// Given
-	ledger.unlocking = bounded_vec![c(4, 100), c(5, 100), c(6, 100), c(7, 100)];
-	ledger.total = 4 * 100;
-	ledger.active = 0;
-	// When the first 2 chunks don't overlap with the affected range of unlock eras.
-	assert_eq!(ledger.slash(140, 0, 3), 140);
-	// Then
-	assert_eq!(ledger.unlocking, vec![c(4, 100), c(5, 100), c(6, 30), c(7, 30)]);
-	assert_eq!(ledger.total, 4 * 100 - 140);
-	assert_eq!(LedgerSlashPerEra::get().0, 0);
-	assert_eq!(LedgerSlashPerEra::get().1, BTreeMap::from([(6, 30), (7, 30)]));
+		// Given
+		ledger.unlocking = bounded_vec![c(4, 100), c(5, 100), c(6, 100), c(7, 100)];
+		ledger.total = 4 * 100;
+		ledger.active = 0;
+		// When the first 2 chunks don't overlap with the affected range of unlock eras.
+		assert_eq!(ledger.slash(140, 0, 3), 140);
+		// Then
+		assert_eq!(ledger.unlocking, vec![c(4, 100), c(5, 100), c(6, 30), c(7, 30)]);
+		assert_eq!(ledger.total, 4 * 100 - 140);
+		assert_eq!(LedgerSlashPerEra::get().0, 0);
+		assert_eq!(LedgerSlashPerEra::get().1, BTreeMap::from([(6, 30), (7, 30)]));
 
-	// Given
-	ledger.unlocking = bounded_vec![c(4, 100), c(5, 100), c(6, 100), c(7, 100)];
-	ledger.total = 4 * 100;
-	ledger.active = 0;
-	// When the first 2 chunks don't overlap with the affected range of unlock eras.
-	assert_eq!(ledger.slash(15, 0, 3), 15);
-	// Then
-	assert_eq!(ledger.unlocking, vec![c(4, 100), c(5, 100), c(6, 100 - 8), c(7, 100 - 7)]);
-	assert_eq!(ledger.total, 4 * 100 - 15);
-	assert_eq!(LedgerSlashPerEra::get().0, 0);
-	assert_eq!(LedgerSlashPerEra::get().1, BTreeMap::from([(6, 92), (7, 93)]));
+		// Given
+		ledger.unlocking = bounded_vec![c(4, 100), c(5, 100), c(6, 100), c(7, 100)];
+		ledger.total = 4 * 100;
+		ledger.active = 0;
+		// When the first 2 chunks don't overlap with the affected range of unlock eras.
+		assert_eq!(ledger.slash(15, 0, 3), 15);
+		// Then
+		assert_eq!(ledger.unlocking, vec![c(4, 100), c(5, 100), c(6, 100 - 8), c(7, 100 - 7)]);
+		assert_eq!(ledger.total, 4 * 100 - 15);
+		assert_eq!(LedgerSlashPerEra::get().0, 0);
+		assert_eq!(LedgerSlashPerEra::get().1, BTreeMap::from([(6, 92), (7, 93)]));
 
-	// Given
-	ledger.unlocking = bounded_vec![c(4, 40), c(5, 100), c(6, 10), c(7, 250)];
-	ledger.active = 500;
-	// 900
-	ledger.total = 40 + 10 + 100 + 250 + 500;
-	// When we have a partial slash that touches all chunks
-	assert_eq!(ledger.slash(900 / 2, 0, 0), 450);
-	// Then
-	assert_eq!(ledger.active, 500 / 2);
-	assert_eq!(ledger.unlocking, vec![c(4, 40 / 2), c(5, 100 / 2), c(6, 10 / 2), c(7, 250 / 2)]);
-	assert_eq!(ledger.total, 900 / 2);
-	assert_eq!(LedgerSlashPerEra::get().0, 500 / 2);
-	assert_eq!(
-		LedgerSlashPerEra::get().1,
-		BTreeMap::from([(4, 40 / 2), (5, 100 / 2), (6, 10 / 2), (7, 250 / 2)])
-	);
+		// Given
+		ledger.unlocking = bounded_vec![c(4, 40), c(5, 100), c(6, 10), c(7, 250)];
+		ledger.active = 500;
+		// 900
+		ledger.total = 40 + 10 + 100 + 250 + 500;
+		// When we have a partial slash that touches all chunks
+		assert_eq!(ledger.slash(900 / 2, 0, 0), 450);
+		// Then
+		assert_eq!(ledger.active, 500 / 2);
+		assert_eq!(
+			ledger.unlocking,
+			vec![c(4, 40 / 2), c(5, 100 / 2), c(6, 10 / 2), c(7, 250 / 2)]
+		);
+		assert_eq!(ledger.total, 900 / 2);
+		assert_eq!(LedgerSlashPerEra::get().0, 500 / 2);
+		assert_eq!(
+			LedgerSlashPerEra::get().1,
+			BTreeMap::from([(4, 40 / 2), (5, 100 / 2), (6, 10 / 2), (7, 250 / 2)])
+		);
 
-	// slash 1/4th with not chunk.
-	ledger.unlocking = bounded_vec![];
-	ledger.active = 500;
-	ledger.total = 500;
-	// When we have a partial slash that touches all chunks
-	assert_eq!(ledger.slash(500 / 4, 0, 0), 500 / 4);
-	// Then
-	assert_eq!(ledger.active, 3 * 500 / 4);
-	assert_eq!(ledger.unlocking, vec![]);
-	assert_eq!(ledger.total, ledger.active);
-	assert_eq!(LedgerSlashPerEra::get().0, 3 * 500 / 4);
-	assert_eq!(LedgerSlashPerEra::get().1, Default::default());
+		// slash 1/4th with not chunk.
+		ledger.unlocking = bounded_vec![];
+		ledger.active = 500;
+		ledger.total = 500;
+		// When we have a partial slash that touches all chunks
+		assert_eq!(ledger.slash(500 / 4, 0, 0), 500 / 4);
+		// Then
+		assert_eq!(ledger.active, 3 * 500 / 4);
+		assert_eq!(ledger.unlocking, vec![]);
+		assert_eq!(ledger.total, ledger.active);
+		assert_eq!(LedgerSlashPerEra::get().0, 3 * 500 / 4);
+		assert_eq!(LedgerSlashPerEra::get().1, Default::default());
 
-	// Given we have the same as above,
-	ledger.unlocking = bounded_vec![c(4, 40), c(5, 100), c(6, 10), c(7, 250)];
-	ledger.active = 500;
-	ledger.total = 40 + 10 + 100 + 250 + 500; // 900
-	assert_eq!(ledger.total, 900);
-	// When we have a higher min balance
-	assert_eq!(
-		ledger.slash(
-			900 / 2,
-			25, /* min balance - chunks with era 0 & 2 will be slashed to <=25, causing it to
-			     * get swept */
-			0
-		),
-		450
-	);
-	assert_eq!(ledger.active, 500 / 2);
-	// the last chunk was not slashed 50% like all the rest, because some other earlier chunks got
-	// dusted.
-	assert_eq!(ledger.unlocking, vec![c(5, 100 / 2), c(7, 150)]);
-	assert_eq!(ledger.total, 900 / 2);
-	assert_eq!(LedgerSlashPerEra::get().0, 500 / 2);
-	assert_eq!(
-		LedgerSlashPerEra::get().1,
-		BTreeMap::from([(4, 0), (5, 100 / 2), (6, 0), (7, 150)])
-	);
+		// Given we have the same as above,
+		ledger.unlocking = bounded_vec![c(4, 40), c(5, 100), c(6, 10), c(7, 250)];
+		ledger.active = 500;
+		ledger.total = 40 + 10 + 100 + 250 + 500; // 900
+		assert_eq!(ledger.total, 900);
+		// When we have a higher min balance
+		assert_eq!(
+			ledger.slash(
+				900 / 2,
+				25, /* min balance - chunks with era 0 & 2 will be slashed to <=25, causing it
+				     * to get swept */
+				0
+			),
+			450
+		);
+		assert_eq!(ledger.active, 500 / 2);
+		// the last chunk was not slashed 50% like all the rest, because some other earlier chunks
+		// got dusted.
+		assert_eq!(ledger.unlocking, vec![c(5, 100 / 2), c(7, 150)]);
+		assert_eq!(ledger.total, 900 / 2);
+		assert_eq!(LedgerSlashPerEra::get().0, 500 / 2);
+		assert_eq!(
+			LedgerSlashPerEra::get().1,
+			BTreeMap::from([(4, 0), (5, 100 / 2), (6, 0), (7, 150)])
+		);
 
-	// Given
-	// slash order --------------------NA--------2----------0----------1----
-	ledger.unlocking = bounded_vec![c(4, 40), c(5, 100), c(6, 10), c(7, 250)];
-	ledger.active = 500;
-	ledger.total = 40 + 10 + 100 + 250 + 500; // 900
-	assert_eq!(
-		ledger.slash(
-			500 + 10 + 250 + 100 / 2, // active + era 6 + era 7 + era 5 / 2
-			0,
-			3 /* slash era 6 first, so the affected parts are era 6, era 7 and
-			   * ledge.active. This will cause the affected to go to zero, and then we will
-			   * start slashing older chunks */
-		),
-		500 + 250 + 10 + 100 / 2
-	);
-	// Then
-	assert_eq!(ledger.active, 0);
-	assert_eq!(ledger.unlocking, vec![c(4, 40), c(5, 100 / 2)]);
-	assert_eq!(ledger.total, 90);
-	assert_eq!(LedgerSlashPerEra::get().0, 0);
-	assert_eq!(LedgerSlashPerEra::get().1, BTreeMap::from([(5, 100 / 2), (6, 0), (7, 0)]));
+		// Given
+		// slash order --------------------NA--------2----------0----------1----
+		ledger.unlocking = bounded_vec![c(4, 40), c(5, 100), c(6, 10), c(7, 250)];
+		ledger.active = 500;
+		ledger.total = 40 + 10 + 100 + 250 + 500; // 900
+		assert_eq!(
+			ledger.slash(
+				500 + 10 + 250 + 100 / 2, // active + era 6 + era 7 + era 5 / 2
+				0,
+				3 /* slash era 6 first, so the affected parts are era 6, era 7 and
+				   * ledge.active. This will cause the affected to go to zero, and then we will
+				   * start slashing older chunks */
+			),
+			500 + 250 + 10 + 100 / 2
+		);
+		// Then
+		assert_eq!(ledger.active, 0);
+		assert_eq!(ledger.unlocking, vec![c(4, 40), c(5, 100 / 2)]);
+		assert_eq!(ledger.total, 90);
+		assert_eq!(LedgerSlashPerEra::get().0, 0);
+		assert_eq!(LedgerSlashPerEra::get().1, BTreeMap::from([(5, 100 / 2), (6, 0), (7, 0)]));
 
-	// Given
-	// iteration order------------------NA---------2----------0----------1----
-	ledger.unlocking = bounded_vec![c(4, 100), c(5, 100), c(6, 100), c(7, 100)];
-	ledger.active = 100;
-	ledger.total = 5 * 100;
-	// When
-	assert_eq!(
-		ledger.slash(
-			351, // active + era 6 + era 7 + era 5 / 2 + 1
-			50,  // min balance - everything slashed below 50 will get dusted
-			3    /* slash era 3+3 first, so the affected parts are era 6, era 7 and
-			      * ledge.active. This will cause the affected to go to zero, and then we will
-			      * start slashing older chunks */
-		),
-		400
-	);
-	// Then
-	assert_eq!(ledger.active, 0);
-	assert_eq!(ledger.unlocking, vec![c(4, 100)]);
-	assert_eq!(ledger.total, 100);
-	assert_eq!(LedgerSlashPerEra::get().0, 0);
-	assert_eq!(LedgerSlashPerEra::get().1, BTreeMap::from([(5, 0), (6, 0), (7, 0)]));
+		// Given
+		// iteration order------------------NA---------2----------0----------1----
+		ledger.unlocking = bounded_vec![c(4, 100), c(5, 100), c(6, 100), c(7, 100)];
+		ledger.active = 100;
+		ledger.total = 5 * 100;
+		// When
+		assert_eq!(
+			ledger.slash(
+				351, // active + era 6 + era 7 + era 5 / 2 + 1
+				50,  // min balance - everything slashed below 50 will get dusted
+				3    /* slash era 3+3 first, so the affected parts are era 6, era 7 and
+				      * ledge.active. This will cause the affected to go to zero, and then we
+				      * will start slashing older chunks */
+			),
+			400
+		);
+		// Then
+		assert_eq!(ledger.active, 0);
+		assert_eq!(ledger.unlocking, vec![c(4, 100)]);
+		assert_eq!(ledger.total, 100);
+		assert_eq!(LedgerSlashPerEra::get().0, 0);
+		assert_eq!(LedgerSlashPerEra::get().1, BTreeMap::from([(5, 0), (6, 0), (7, 0)]));
 
-	// Tests for saturating arithmetic
+		// Tests for saturating arithmetic
 
-	// Given
-	let slash = u64::MAX as Balance * 2;
-	// The value of the other parts of ledger that will get slashed
-	let value = slash - (10 * 4);
+		// Given
+		let slash = u64::MAX as Balance * 2;
+		// The value of the other parts of ledger that will get slashed
+		let value = slash - (10 * 4);
 
-	ledger.active = 10;
-	ledger.unlocking = bounded_vec![c(4, 10), c(5, 10), c(6, 10), c(7, value)];
-	ledger.total = value + 40;
-	// When
-	let slash_amount = ledger.slash(slash, 0, 0);
-	assert_eq_error_rate!(slash_amount, slash, 5);
-	// Then
-	assert_eq!(ledger.active, 0); // slash of 9
-	assert_eq!(ledger.unlocking, vec![]);
-	assert_eq!(ledger.total, 0);
-	assert_eq!(LedgerSlashPerEra::get().0, 0);
-	assert_eq!(LedgerSlashPerEra::get().1, BTreeMap::from([(4, 0), (5, 0), (6, 0), (7, 0)]));
+		ledger.active = 10;
+		ledger.unlocking = bounded_vec![c(4, 10), c(5, 10), c(6, 10), c(7, value)];
+		ledger.total = value + 40;
+		// When
+		let slash_amount = ledger.slash(slash, 0, 0);
+		assert_eq_error_rate!(slash_amount, slash, 5);
+		// Then
+		assert_eq!(ledger.active, 0); // slash of 9
+		assert_eq!(ledger.unlocking, vec![]);
+		assert_eq!(ledger.total, 0);
+		assert_eq!(LedgerSlashPerEra::get().0, 0);
+		assert_eq!(LedgerSlashPerEra::get().1, BTreeMap::from([(4, 0), (5, 0), (6, 0), (7, 0)]));
 
-	// Given
-	use sp_runtime::PerThing as _;
-	let slash = u64::MAX as Balance * 2;
-	let value = u64::MAX as Balance * 2;
-	let unit = 100;
-	// slash * value that will saturate
-	assert!(slash.checked_mul(value).is_none());
-	// but slash * unit won't.
-	assert!(slash.checked_mul(unit).is_some());
-	ledger.unlocking = bounded_vec![c(4, unit), c(5, value), c(6, unit), c(7, unit)];
-	//--------------------------------------note value^^^
-	ledger.active = unit;
-	ledger.total = unit * 4 + value;
-	// When
-	assert_eq!(ledger.slash(slash, 0, 0), slash);
-	// Then
-	// The amount slashed out of `unit`
-	let affected_balance = value + unit * 4;
-	let ratio =
-		Perquintill::from_rational_with_rounding(slash, affected_balance, Rounding::Up).unwrap();
-	// `unit` after the slash is applied
-	let unit_slashed = {
-		let unit_slash = ratio.mul_ceil(unit);
-		unit - unit_slash
-	};
-	let value_slashed = {
-		let value_slash = ratio.mul_ceil(value);
-		value - value_slash
-	};
-	assert_eq!(ledger.active, unit_slashed);
-	assert_eq!(ledger.unlocking, vec![c(5, value_slashed), c(7, 32)]);
-	assert_eq!(ledger.total, value_slashed + 32);
-	assert_eq!(LedgerSlashPerEra::get().0, 0);
-	assert_eq!(
-		LedgerSlashPerEra::get().1,
-		BTreeMap::from([(4, 0), (5, value_slashed), (6, 0), (7, 32)])
-	);
+		// Given
+		use sp_runtime::PerThing as _;
+		let slash = u64::MAX as Balance * 2;
+		let value = u64::MAX as Balance * 2;
+		let unit = 100;
+		// slash * value that will saturate
+		assert!(slash.checked_mul(value).is_none());
+		// but slash * unit won't.
+		assert!(slash.checked_mul(unit).is_some());
+		ledger.unlocking = bounded_vec![c(4, unit), c(5, value), c(6, unit), c(7, unit)];
+		//--------------------------------------note value^^^
+		ledger.active = unit;
+		ledger.total = unit * 4 + value;
+		// When
+		assert_eq!(ledger.slash(slash, 0, 0), slash);
+		// Then
+		// The amount slashed out of `unit`
+		let affected_balance = value + unit * 4;
+		let ratio = Perquintill::from_rational_with_rounding(slash, affected_balance, Rounding::Up)
+			.unwrap();
+		// `unit` after the slash is applied
+		let unit_slashed = {
+			let unit_slash = ratio.mul_ceil(unit);
+			unit - unit_slash
+		};
+		let value_slashed = {
+			let value_slash = ratio.mul_ceil(value);
+			value - value_slash
+		};
+		assert_eq!(ledger.active, unit_slashed);
+		assert_eq!(ledger.unlocking, vec![c(5, value_slashed), c(7, 32)]);
+		assert_eq!(ledger.total, value_slashed + 32);
+		assert_eq!(LedgerSlashPerEra::get().0, 0);
+		assert_eq!(
+			LedgerSlashPerEra::get().1,
+			BTreeMap::from([(4, 0), (5, value_slashed), (6, 0), (7, 32)])
+		);
+	});
 }
 
 #[test]

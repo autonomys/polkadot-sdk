@@ -22,6 +22,7 @@ use crate::{
 	protocol_controller::{self, SetId},
 	service::{metrics::NotificationMetrics, traits::Direction},
 	types::ProtocolName,
+	MAX_RESPONSE_SIZE,
 };
 
 use codec::Encode;
@@ -49,6 +50,10 @@ pub(crate) use notifications::ProtocolHandle;
 pub use notifications::{notification_service, NotificationsSink, ProtocolHandlePair, Ready};
 
 mod notifications;
+
+/// Maximum size used for notifications in the block announce and transaction protocols.
+// Must be equal to `max(MAX_BLOCK_ANNOUNCE_SIZE, MAX_TRANSACTIONS_SIZE)`.
+pub(crate) const BLOCK_ANNOUNCES_TRANSACTIONS_SUBSTREAM_SIZE: u64 = MAX_RESPONSE_SIZE;
 
 pub mod message;
 
@@ -305,7 +310,7 @@ impl<B: BlockT> NetworkBehaviour for Protocol<B> {
 				notifications_sink,
 				negotiated_fallback,
 				..
-			} =>
+			} => {
 				if set_id == HARDCODED_PEERSETS_SYNC {
 					let _ = self.sync_handle.report_substream_opened(
 						peer_id,
@@ -330,8 +335,9 @@ impl<B: BlockT> NetworkBehaviour for Protocol<B> {
 							None
 						},
 					}
-				},
-			NotificationsOut::CustomProtocolReplaced { peer_id, notifications_sink, set_id } =>
+				}
+			},
+			NotificationsOut::CustomProtocolReplaced { peer_id, notifications_sink, set_id } => {
 				if set_id == HARDCODED_PEERSETS_SYNC {
 					let _ = self
 						.sync_handle
@@ -345,7 +351,8 @@ impl<B: BlockT> NetworkBehaviour for Protocol<B> {
 							notifications_sink,
 						},
 					)
-				},
+				}
+			},
 			NotificationsOut::CustomProtocolClosed { peer_id, set_id } => {
 				if set_id == HARDCODED_PEERSETS_SYNC {
 					let _ = self.sync_handle.report_substream_closed(peer_id);

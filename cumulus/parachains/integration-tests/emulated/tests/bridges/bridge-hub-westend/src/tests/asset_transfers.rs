@@ -14,6 +14,9 @@
 // limitations under the License.
 
 use crate::{create_pool_with_native_on, tests::*};
+use emulated_integration_tests_common::{
+	xcm_helpers::find_mq_processed_id, xcm_simulator::helpers::TopicIdTracker,
+};
 use xcm::latest::AssetTransferFilter;
 
 fn send_assets_over_bridge<F: FnOnce()>(send_fn: F) {
@@ -553,6 +556,7 @@ fn dry_run_transfer_to_rococo_sends_xcm_to_bridge_hub() {
 }
 
 fn do_send_pens_and_wnds_from_penpal_westend_via_ahw_to_asset_hub_rococo(
+	topic_id_tracker: &mut TopicIdTracker,
 	wnds: (Location, u128),
 	pens: (Location, u128),
 ) {
@@ -612,7 +616,9 @@ fn do_send_pens_and_wnds_from_penpal_westend_via_ahw_to_asset_hub_rococo(
 					destination: reanchored_dest,
 					remote_fees: Some(AssetTransferFilter::ReserveDeposit(onward_wnds.into())),
 					preserve_origin: false,
-					assets: vec![AssetTransferFilter::ReserveDeposit(reanchored_pens.into())],
+					assets: BoundedVec::truncate_from(vec![AssetTransferFilter::ReserveDeposit(
+						reanchored_pens.into(),
+					)]),
 					remote_xcm: xcm_on_dest,
 				},
 			]);
@@ -634,10 +640,10 @@ fn do_send_pens_and_wnds_from_penpal_westend_via_ahw_to_asset_hub_rococo(
 					remote_fees: Some(AssetTransferFilter::ReserveWithdraw(ahw_fees.into())),
 					preserve_origin: false,
 					// PENs are teleported to AHW, rest of non-fee WNDs are reserve-withdrawn at AHW
-					assets: vec![
+					assets: BoundedVec::truncate_from(vec![
 						AssetTransferFilter::Teleport(pens.into()),
 						AssetTransferFilter::ReserveWithdraw(ahw_non_fees_wnds.into()),
-					],
+					]),
 					remote_xcm: xcm_on_ahw,
 				},
 			]);
@@ -650,6 +656,9 @@ fn do_send_pens_and_wnds_from_penpal_westend_via_ahw_to_asset_hub_rococo(
 		}));
 		AssetHubWestend::execute_with(|| {
 			type RuntimeEvent = <AssetHubWestend as Chain>::RuntimeEvent;
+			let mq_prc_id =
+				find_mq_processed_id::<AssetHubWestend>().expect("Missing Processed Event");
+			topic_id_tracker.insert_and_assert_unique("AssetHubWestend", mq_prc_id);
 			assert_expected_events!(
 				AssetHubWestend,
 				vec![
@@ -669,6 +678,12 @@ fn do_send_pens_and_wnds_from_penpal_westend_via_ahw_to_asset_hub_rococo(
 					) => {},
 				]
 			);
+		});
+
+		BridgeHubWestend::ext_wrapper(|| {
+			let mq_prc_id =
+				find_mq_processed_id::<BridgeHubWestend>().expect("Missing Processed Event");
+			topic_id_tracker.insert_and_assert_unique("BridgeHubWestend", mq_prc_id);
 		});
 	});
 }
@@ -774,14 +789,20 @@ fn send_pens_and_wnds_from_penpal_westend_via_ahw_to_ahr() {
 		)
 	});
 
+	// init topic ID tracker
+	let mut topic_id_tracker = TopicIdTracker::new();
+
 	// transfer assets
 	do_send_pens_and_wnds_from_penpal_westend_via_ahw_to_asset_hub_rococo(
+		&mut topic_id_tracker,
 		(wnd_at_westend_parachains.clone(), wnds_to_send),
 		(pens_location_on_penpal.try_into().unwrap(), pens_to_send),
 	);
 
 	AssetHubRococo::execute_with(|| {
 		type RuntimeEvent = <AssetHubRococo as Chain>::RuntimeEvent;
+		let mq_prc_id = find_mq_processed_id::<AssetHubRococo>().expect("Missing Processed Event");
+		topic_id_tracker.insert_and_assert_unique("AssetHubRococo", mq_prc_id);
 		assert_expected_events!(
 			AssetHubRococo,
 			vec![
@@ -797,6 +818,9 @@ fn send_pens_and_wnds_from_penpal_westend_via_ahw_to_ahr() {
 			]
 		);
 	});
+
+	// assert unique topic across all chains
+	topic_id_tracker.assert_unique();
 
 	// account balances after
 	let sender_wnds_after = PenpalB::execute_with(|| {

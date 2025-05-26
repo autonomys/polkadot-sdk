@@ -183,11 +183,9 @@ pub struct NetworkParams {
 		long,
 		value_enum,
 		value_name = "NETWORK_BACKEND",
-		default_value_t = NetworkBackendType::Libp2p,
 		ignore_case = true,
 		verbatim_doc_comment
 	)]
-	pub network_backend: NetworkBackendType,
 
 	/// Parameter that allows node to forcefully assume it is synced, needed for network
 	/// bootstrapping only, as long as two synced nodes remain on the network at any time, this
@@ -196,6 +194,7 @@ pub struct NetworkParams {
 	/// `--dev` enables this option automatically.
 	#[clap(long)]
 	pub force_synced: bool,
+	pub network_backend: Option<NetworkBackendType>,
 }
 
 impl NetworkParams {
@@ -248,15 +247,16 @@ impl NetworkParams {
 		// Activate if the user explicitly requested local discovery, `--dev` is given or the
 		// chain type is `Local`/`Development`
 		let allow_non_globals_in_dht =
-			self.discover_local ||
-				is_dev || matches!(chain_type, ChainType::Local | ChainType::Development);
+			self.discover_local
+				|| is_dev || matches!(chain_type, ChainType::Local | ChainType::Development);
 
 		let allow_private_ip = match (self.allow_private_ip, self.no_private_ip) {
 			(true, true) => unreachable!("`*_private_ip` flags are mutually exclusive; qed"),
 			(true, false) => true,
 			(false, true) => false,
-			(false, false) =>
-				is_dev || matches!(chain_type, ChainType::Local | ChainType::Development),
+			(false, false) => {
+				is_dev || matches!(chain_type, ChainType::Local | ChainType::Development)
+			},
 		};
 
 		NetworkConfiguration {
@@ -292,8 +292,8 @@ impl NetworkParams {
 			ipfs_server: self.ipfs_server,
 			sync_mode: self.sync.into(),
 			pause_sync: Arc::new(AtomicBool::new(false)),
-			network_backend: self.network_backend.into(),
 			force_synced: self.force_synced || is_dev,
+			network_backend: self.network_backend.map(Into::into),
 		}
 	}
 }

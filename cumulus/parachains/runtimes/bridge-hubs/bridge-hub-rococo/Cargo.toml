@@ -1,6 +1,6 @@
 [package]
 name = "bridge-hub-rococo-runtime"
-version = "0.18.0"
+version = "0.18.4"
 authors.workspace = true
 edition.workspace = true
 description = "Rococo's BridgeHub parachain runtime"
@@ -76,7 +76,6 @@ parachains-common.workspace = true
 testnet-parachains-constants = { features = ["rococo"], workspace = true }
 bp-asset-hub-rococo.workspace = true
 bp-asset-hub-westend.workspace = true
-bp-bridge-hub-polkadot.workspace = true
 bp-bridge-hub-rococo.workspace = true
 bp-bridge-hub-westend.workspace = true
 bp-header-chain.workspace = true
@@ -112,13 +111,13 @@ bridge-hub-test-utils = { default-features = true, path = "../test-utils" }
 bridge-runtime-common = { features = ["integrity-test"], default-features = true, path = "../../../../../bridges/bin/runtime-common" }
 pallet-bridge-relayers = { features = ["integrity-test"], path = "../../../../../bridges/modules/relayers", default-features = false }
 snowbridge-runtime-test-common = { default-features = true, path = "../../../../../bridges/snowbridge/runtime/test-common" }
+parachains-runtimes-test-utils = { default-features = true, path = "../../test-utils" }
 
 [features]
 default = ["std"]
 std = [
 	"bp-asset-hub-rococo/std",
 	"bp-asset-hub-westend/std",
-	"bp-bridge-hub-polkadot/std",
 	"bp-bridge-hub-rococo/std",
 	"bp-bridge-hub-westend/std",
 	"bp-header-chain/std",

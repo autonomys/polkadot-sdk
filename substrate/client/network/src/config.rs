@@ -675,7 +675,7 @@ pub struct NetworkConfiguration {
 	pub yamux_window_size: Option<u32>,
 
 	/// Networking backend used for P2P communication.
-	pub network_backend: NetworkBackendType,
+	pub network_backend: Option<NetworkBackendType>,
 
 	/// Parameter that allows node to forcefully assume it is synced, needed for network
 	/// bootstrapping only, as long as two synced nodes remain on the network at any time, this
@@ -714,8 +714,8 @@ impl NetworkConfiguration {
 				.expect("value is a constant; constant is non-zero; qed."),
 			yamux_window_size: None,
 			ipfs_server: false,
-			network_backend: NetworkBackendType::Libp2p,
 			force_synced: false,
+			network_backend: None,
 		}
 	}
 
@@ -941,9 +941,10 @@ impl<B: BlockT + 'static, H: ExHashT, N: NetworkBackend<B, H>> FullNetworkConfig
 }
 
 /// Network backend type.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default, Copy)]
 pub enum NetworkBackendType {
 	/// Use libp2p for P2P networking.
+	#[default]
 	Libp2p,
 
 	/// Use litep2p for P2P networking.

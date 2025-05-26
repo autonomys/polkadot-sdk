@@ -18,7 +18,7 @@ on:
 
 jobs:
   check-synchronization:
-    uses: paritytech-release/sync-workflows/.github/workflows/check-syncronization.yml@main
+    uses: paritytech-release/sync-workflows/.github/workflows/check-synchronization.yml@main
 
   validate-inputs:
     needs: [ check-synchronization ]
@@ -79,7 +79,7 @@ jobs:
 
       - name: Prepare tooling
         run: |
-          URL=https://github.com/chevdor/tera-cli/releases/download/v0.2.4/tera-cli_linux_amd64.deb
+          URL=https://github.com/chevdor/tera-cli/releases/download/v0.4.0/tera-cli_linux_amd64.deb
           wget $URL -O tera.deb
           sudo dpkg -i tera.deb
 
@@ -176,9 +176,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ steps.generate_write_token.outputs.token }}
         run: |
+          VERSIONED_ASSET="${{ matrix.chain }}_runtime-v${{ env.SPEC }}.compact.compressed.wasm"
+          mv "${{ env.ASSET }}" "$VERSIONED_ASSET"
+
           gh release upload ${{ needs.validate-inputs.outputs.release_tag }} \
-            --repo paritytech/polkadot-sdk \
-            '${{ env.ASSET }}#${{ matrix.chain }}_runtime-v${{ env.SPEC }}.compact.compressed.wasm'
+            --repo paritytech/polkadot-sdk "$VERSIONED_ASSET"
 
   publish-release-artifacts:
     needs: [ validate-inputs, publish-release-draft ]

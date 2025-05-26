@@ -22,9 +22,9 @@ use crate::{
 	EnsureDecodableXcm,
 };
 pub use crate::{
-	AliasForeignAccountId32, AllowExplicitUnpaidExecutionFrom, AllowKnownQueryResponses,
-	AllowTopLevelPaidExecutionFrom, AllowUnpaidExecutionFrom, FixedRateOfFungible,
-	FixedWeightBounds, TakeWeightCredit,
+	AliasChildLocation, AliasForeignAccountId32, AllowExplicitUnpaidExecutionFrom,
+	AllowKnownQueryResponses, AllowTopLevelPaidExecutionFrom, AllowUnpaidExecutionFrom,
+	FixedRateOfFungible, FixedWeightBounds, TakeWeightCredit,
 };
 pub use alloc::collections::{btree_map::BTreeMap, btree_set::BTreeSet};
 pub use codec::{Decode, Encode};
@@ -48,6 +48,7 @@ pub use xcm_executor::{
 	},
 	AssetsInHolding, Config,
 };
+pub use xcm_simulator::helpers::derive_topic_id;
 
 #[derive(Debug)]
 pub enum TestOrigin {
@@ -174,7 +175,7 @@ impl SendXcm for TestMessageSenderImpl {
 		msg: &mut Option<Xcm<()>>,
 	) -> SendResult<(Location, Xcm<()>, XcmHash)> {
 		let msg = msg.take().unwrap();
-		let hash = fake_message_hash(&msg);
+		let hash = derive_topic_id(&msg);
 		let triplet = (dest.take().unwrap(), msg, hash);
 		Ok((triplet, SEND_PRICE.with(|l| l.borrow().clone())))
 	}
@@ -204,7 +205,7 @@ impl ExportXcm for TestMessageExporter {
 				Ok(Assets::new())
 			}
 		});
-		let h = fake_message_hash(&m);
+		let h = derive_topic_id(&m);
 		match r {
 			Ok(price) => Ok(((network, channel, s, d, m, h), price)),
 			Err(e) => {
@@ -732,6 +733,9 @@ impl Contains<Location> for ParentPrefix {
 	}
 }
 
+/// Pairs (location1, location2) where location1 can alias as location2.
+pub type Aliasers = (AliasForeignAccountId32<SiblingPrefix>, AliasChildLocation);
+
 pub struct TestConfig;
 impl Config for TestConfig {
 	type RuntimeCall = TestCall;
@@ -757,7 +761,7 @@ impl Config for TestConfig {
 	type MessageExporter = TestMessageExporter;
 	type CallDispatcher = TestCall;
 	type SafeCallFilter = Everything;
-	type Aliasers = AliasForeignAccountId32<SiblingPrefix>;
+	type Aliasers = Aliasers;
 	type TransactionalProcessor = ();
 	type HrmpNewChannelOpenRequestHandler = ();
 	type HrmpChannelAcceptedHandler = ();
