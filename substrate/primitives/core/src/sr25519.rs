@@ -36,7 +36,7 @@ use schnorrkel::{
 };
 
 use crate::crypto::{CryptoType, CryptoTypeId, Derive, Public as TraitPublic, SignatureBytes};
-use codec::{Decode, Encode, MaxEncodedLen};
+use codec::{Decode, DecodeWithMemTracking, Encode, MaxEncodedLen};
 use scale_info::TypeInfo;
 
 #[cfg(all(not(feature = "std"), feature = "serde"))]
@@ -379,7 +379,9 @@ pub mod vrf {
 	}
 
 	/// VRF signature data
-	#[derive(Clone, Debug, PartialEq, Eq, Encode, Decode, MaxEncodedLen, TypeInfo)]
+	#[derive(
+		Clone, Debug, PartialEq, Eq, Encode, Decode, MaxEncodedLen, TypeInfo, DecodeWithMemTracking,
+	)]
 	pub struct VrfSignature {
 		/// VRF pre-output.
 		pub pre_output: VrfPreOutput,
@@ -418,6 +420,8 @@ pub mod vrf {
 		}
 	}
 
+	impl DecodeWithMemTracking for VrfPreOutput {}
+
 	/// VRF proof type suitable for schnorrkel operations.
 	#[derive(Clone, Debug, PartialEq, Eq)]
 	pub struct VrfProof(pub schnorrkel::vrf::VRFProof);
@@ -448,6 +452,8 @@ pub mod vrf {
 			Self::Identity::type_info()
 		}
 	}
+
+	impl DecodeWithMemTracking for VrfProof {}
 
 	#[cfg(feature = "full_crypto")]
 	impl VrfCrypto for Pair {
@@ -516,25 +522,34 @@ pub mod vrf {
 			NotMarkedSchnorrkel => "Signature error: `NotMarkedSchnorrkel`".into(),
 			BytesLengthError { .. } => "Signature error: `BytesLengthError`".into(),
 			InvalidKey => "Signature error: `InvalidKey`".into(),
-			MuSigAbsent { musig_stage: Commitment } =>
-				"Signature error: `MuSigAbsent` at stage `Commitment`".into(),
-			MuSigAbsent { musig_stage: Reveal } =>
-				"Signature error: `MuSigAbsent` at stage `Reveal`".into(),
-			MuSigAbsent { musig_stage: Cosignature } =>
-				"Signature error: `MuSigAbsent` at stage `Commitment`".into(),
-			MuSigInconsistent { musig_stage: Commitment, duplicate: true } =>
-				"Signature error: `MuSigInconsistent` at stage `Commitment` on duplicate".into(),
-			MuSigInconsistent { musig_stage: Commitment, duplicate: false } =>
-				"Signature error: `MuSigInconsistent` at stage `Commitment` on not duplicate".into(),
-			MuSigInconsistent { musig_stage: Reveal, duplicate: true } =>
-				"Signature error: `MuSigInconsistent` at stage `Reveal` on duplicate".into(),
-			MuSigInconsistent { musig_stage: Reveal, duplicate: false } =>
-				"Signature error: `MuSigInconsistent` at stage `Reveal` on not duplicate".into(),
-			MuSigInconsistent { musig_stage: Cosignature, duplicate: true } =>
-				"Signature error: `MuSigInconsistent` at stage `Cosignature` on duplicate".into(),
-			MuSigInconsistent { musig_stage: Cosignature, duplicate: false } =>
+			MuSigAbsent { musig_stage: Commitment } => {
+				"Signature error: `MuSigAbsent` at stage `Commitment`".into()
+			},
+			MuSigAbsent { musig_stage: Reveal } => {
+				"Signature error: `MuSigAbsent` at stage `Reveal`".into()
+			},
+			MuSigAbsent { musig_stage: Cosignature } => {
+				"Signature error: `MuSigAbsent` at stage `Commitment`".into()
+			},
+			MuSigInconsistent { musig_stage: Commitment, duplicate: true } => {
+				"Signature error: `MuSigInconsistent` at stage `Commitment` on duplicate".into()
+			},
+			MuSigInconsistent { musig_stage: Commitment, duplicate: false } => {
+				"Signature error: `MuSigInconsistent` at stage `Commitment` on not duplicate".into()
+			},
+			MuSigInconsistent { musig_stage: Reveal, duplicate: true } => {
+				"Signature error: `MuSigInconsistent` at stage `Reveal` on duplicate".into()
+			},
+			MuSigInconsistent { musig_stage: Reveal, duplicate: false } => {
+				"Signature error: `MuSigInconsistent` at stage `Reveal` on not duplicate".into()
+			},
+			MuSigInconsistent { musig_stage: Cosignature, duplicate: true } => {
+				"Signature error: `MuSigInconsistent` at stage `Cosignature` on duplicate".into()
+			},
+			MuSigInconsistent { musig_stage: Cosignature, duplicate: false } => {
 				"Signature error: `MuSigInconsistent` at stage `Cosignature` on not duplicate"
-					.into(),
+					.into()
+			},
 		}
 	}
 
