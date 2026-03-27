@@ -69,7 +69,7 @@ pub use self::{
 	metrics::MetricsService,
 };
 #[allow(deprecated)]
-pub use builder::new_native_or_wasm_executor;
+pub use builder::{new_native_or_wasm_executor, GenRpcModuleParams};
 
 pub use sc_chain_spec::{
 	construct_genesis_block, resolve_state_version_from_wasm, BuildGenesisBlock,
