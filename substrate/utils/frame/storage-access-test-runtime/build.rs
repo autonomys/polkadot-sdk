@@ -18,11 +18,26 @@
 fn main() {
 	#[cfg(feature = "std")]
 	{
-		substrate_wasm_builder::WasmBuilder::new()
-			.with_current_project()
-			.export_heap_base()
-			.import_memory()
-			.disable_runtime_version_section_check()
-			.build();
+		// Try to build WASM, fall back to dummy if outside polkadot-sdk workspace.
+		// with_current_project() panics when this crate is used as a transitive
+		// dependency in an external workspace (e.g. via frame-benchmarking-cli).
+		let result = std::panic::catch_unwind(|| {
+			substrate_wasm_builder::WasmBuilder::new()
+				.with_current_project()
+				.export_heap_base()
+				.import_memory()
+				.disable_runtime_version_section_check()
+				.build();
+		});
+		if result.is_err() {
+			let out_dir = std::env::var("OUT_DIR").unwrap();
+			let path = std::path::Path::new(&out_dir).join("wasm_binary.rs");
+			std::fs::write(
+				path,
+				"pub const WASM_BINARY: Option<&[u8]> = None;\n\
+				 pub const WASM_BINARY_BLOATY: Option<&[u8]> = None;\n",
+			)
+			.unwrap();
+		}
 	}
 }
