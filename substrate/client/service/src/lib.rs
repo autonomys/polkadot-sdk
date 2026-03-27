@@ -69,6 +69,7 @@ pub use self::{
 	error::Error,
 	metrics::MetricsService,
 };
+pub use builder::GenRpcModuleParams;
 pub use sc_chain_spec::{
 	construct_genesis_block, resolve_state_version_from_wasm, BuildGenesisBlock,
 	GenesisBlockBuilder,
