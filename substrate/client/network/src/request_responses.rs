@@ -1049,115 +1049,123 @@ impl Codec for GenericCodec {
 	type Request = Vec<u8>;
 	type Response = Result<Vec<u8>, ()>;
 
-	async fn read_request<T>(
+	fn read_request<T>(
 		&mut self,
 		_: &Self::Protocol,
 		mut io: &mut T,
-	) -> io::Result<Self::Request>
+	) -> impl Future<Output = io::Result<Self::Request>> + Send
 	where
 		T: AsyncRead + Unpin + Send,
 	{
-		// Read the length.
-		let length = unsigned_varint::aio::read_usize(&mut io)
-			.await
-			.map_err(|err| io::Error::new(io::ErrorKind::InvalidInput, err))?;
-		if length > usize::try_from(self.max_request_size).unwrap_or(usize::MAX) {
-			return Err(io::Error::new(
-				io::ErrorKind::InvalidInput,
-				format!("Request size exceeds limit: {} > {}", length, self.max_request_size),
-			));
-		}
+		async move {
+			// Read the length.
+			let length = unsigned_varint::aio::read_usize(&mut io)
+				.await
+				.map_err(|err| io::Error::new(io::ErrorKind::InvalidInput, err))?;
+			if length > usize::try_from(self.max_request_size).unwrap_or(usize::MAX) {
+				return Err(io::Error::new(
+					io::ErrorKind::InvalidInput,
+					format!("Request size exceeds limit: {} > {}", length, self.max_request_size),
+				));
+			}
 
-		// Read the payload.
-		let mut buffer = vec![0; length];
-		io.read_exact(&mut buffer).await?;
-		Ok(buffer)
+			// Read the payload.
+			let mut buffer = vec![0; length];
+			io.read_exact(&mut buffer).await?;
+			Ok(buffer)
+		}
 	}
 
-	async fn read_response<T>(
+	fn read_response<T>(
 		&mut self,
 		_: &Self::Protocol,
 		mut io: &mut T,
-	) -> io::Result<Self::Response>
+	) -> impl Future<Output = io::Result<Self::Response>> + Send
 	where
 		T: AsyncRead + Unpin + Send,
 	{
-		// Note that this function returns a `Result<Result<...>>`. Returning an `Err` is
-		// considered as a protocol error and will result in the entire connection being closed.
-		// Returning `Ok(Err(_))` signifies that a response has successfully been fetched, and
-		// that this response is an error.
+		async move {
+			// Note that this function returns a `Result<Result<...>>`. Returning an `Err` is
+			// considered as a protocol error and will result in the entire connection being closed.
+			// Returning `Ok(Err(_))` signifies that a response has successfully been fetched, and
+			// that this response is an error.
 
-		// Read the length.
-		let length = match unsigned_varint::aio::read_usize(&mut io).await {
-			Ok(l) => l,
-			Err(unsigned_varint::io::ReadError::Io(err))
-				if matches!(err.kind(), io::ErrorKind::UnexpectedEof) =>
-			{
-				return Ok(Err(()))
-			},
-			Err(err) => return Err(io::Error::new(io::ErrorKind::InvalidInput, err)),
-		};
+			// Read the length.
+			let length = match unsigned_varint::aio::read_usize(&mut io).await {
+				Ok(l) => l,
+				Err(unsigned_varint::io::ReadError::Io(err))
+					if matches!(err.kind(), io::ErrorKind::UnexpectedEof) =>
+				{
+					return Ok(Err(()))
+				},
+				Err(err) => return Err(io::Error::new(io::ErrorKind::InvalidInput, err)),
+			};
 
-		if length > usize::try_from(self.max_response_size).unwrap_or(usize::MAX) {
-			return Err(io::Error::new(
-				io::ErrorKind::InvalidInput,
-				format!("Response size exceeds limit: {} > {}", length, self.max_response_size),
-			));
+			if length > usize::try_from(self.max_response_size).unwrap_or(usize::MAX) {
+				return Err(io::Error::new(
+					io::ErrorKind::InvalidInput,
+					format!("Response size exceeds limit: {} > {}", length, self.max_response_size),
+				));
+			}
+
+			// Read the payload.
+			let mut buffer = vec![0; length];
+			io.read_exact(&mut buffer).await?;
+			Ok(Ok(buffer))
 		}
-
-		// Read the payload.
-		let mut buffer = vec![0; length];
-		io.read_exact(&mut buffer).await?;
-		Ok(Ok(buffer))
 	}
 
-	async fn write_request<T>(
+	fn write_request<T>(
 		&mut self,
 		_: &Self::Protocol,
 		io: &mut T,
 		req: Self::Request,
-	) -> io::Result<()>
+	) -> impl Future<Output = io::Result<()>> + Send
 	where
 		T: AsyncWrite + Unpin + Send,
 	{
-		// TODO: check the length?
-		// Write the length.
-		{
-			let mut buffer = unsigned_varint::encode::usize_buffer();
-			io.write_all(unsigned_varint::encode::usize(req.len(), &mut buffer)).await?;
-		}
-
-		// Write the payload.
-		io.write_all(&req).await?;
-
-		io.close().await?;
-		Ok(())
-	}
-
-	async fn write_response<T>(
-		&mut self,
-		_: &Self::Protocol,
-		io: &mut T,
-		res: Self::Response,
-	) -> io::Result<()>
-	where
-		T: AsyncWrite + Unpin + Send,
-	{
-		// If `res` is an `Err`, we jump to closing the substream without writing anything on it.
-		if let Ok(res) = res {
+		async move {
 			// TODO: check the length?
 			// Write the length.
 			{
 				let mut buffer = unsigned_varint::encode::usize_buffer();
-				io.write_all(unsigned_varint::encode::usize(res.len(), &mut buffer)).await?;
+				io.write_all(unsigned_varint::encode::usize(req.len(), &mut buffer)).await?;
 			}
 
 			// Write the payload.
-			io.write_all(&res).await?;
-		}
+			io.write_all(&req).await?;
 
-		io.close().await?;
-		Ok(())
+			io.close().await?;
+			Ok(())
+		}
+	}
+
+	fn write_response<T>(
+		&mut self,
+		_: &Self::Protocol,
+		io: &mut T,
+		res: Self::Response,
+	) -> impl Future<Output = io::Result<()>> + Send
+	where
+		T: AsyncWrite + Unpin + Send,
+	{
+		async move {
+			// If `res` is an `Err`, we jump to closing the substream without writing anything on it.
+			if let Ok(res) = res {
+				// TODO: check the length?
+				// Write the length.
+				{
+					let mut buffer = unsigned_varint::encode::usize_buffer();
+					io.write_all(unsigned_varint::encode::usize(res.len(), &mut buffer)).await?;
+				}
+
+				// Write the payload.
+				io.write_all(&res).await?;
+			}
+
+			io.close().await?;
+			Ok(())
+		}
 	}
 }
 
