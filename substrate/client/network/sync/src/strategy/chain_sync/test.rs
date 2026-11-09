@@ -1206,6 +1206,7 @@ fn sync_verification_failed_with_gap_filled() {
 
 	let mut sync = ChainSync::new(
 		ChainSyncMode::Full,
+		Default::default(),
 		client.clone(),
 		5,
 		64,
@@ -1228,8 +1229,8 @@ fn sync_verification_failed_with_gap_filled() {
 	log::info!(target: LOG_TARGET, "Before adding peers: {status:?}");
 
 	// Connect the node we will sync from
-	sync.add_peer(peer_id1, best_block.hash(), *best_block.header().number());
-	sync.add_peer(peer_id2, info.best_hash, 0);
+	sync.add_peer(peer_id1, best_block.hash(), *best_block.header().number(), true);
+	sync.add_peer(peer_id2, info.best_hash, 0, true);
 
 	let mut best_block_num = 0;
 	assert_eq!(sync.best_queued_number, 0);
@@ -1345,6 +1346,7 @@ fn sync_gap_filled_regardless_of_blocks_origin() {
 	let client = Arc::new(TestClientBuilder::new().build());
 	let mut sync = ChainSync::new(
 		ChainSyncMode::Full,
+		Default::default(),
 		client.clone(),
 		5,
 		64,
@@ -1449,6 +1451,7 @@ fn gap_sync_body_request_depends_on_policy() {
 
 		let mut sync = ChainSync::new(
 			ChainSyncMode::Full,
+			Default::default(),
 			client.clone(),
 			5,
 			2,
@@ -1469,7 +1472,7 @@ fn gap_sync_body_request_depends_on_policy() {
 			stats: GapSyncStats::new(),
 		});
 
-		sync.add_peer(peer_id, blocks[9].hash(), 10);
+		sync.add_peer(peer_id, blocks[9].hash(), 10, true);
 
 		let requests = sync.block_requests();
 		assert!(
@@ -1500,6 +1503,7 @@ fn gap_sync_truncated_straddling_response_is_retried_header_only() {
 	// `BodiesWithinWindow(3)` the body cutoff is #7.
 	let mut sync = ChainSync::new(
 		ChainSyncMode::Full,
+		Default::default(),
 		client.clone(),
 		5,
 		4,
@@ -1520,7 +1524,7 @@ fn gap_sync_truncated_straddling_response_is_retried_header_only() {
 		stats: GapSyncStats::new(),
 	});
 
-	sync.add_peer(peer_id, blocks[9].hash(), 10);
+	sync.add_peer(peer_id, blocks[9].hash(), 10, true);
 
 	// Range #5..=#8 straddles the cutoff, so bodies are requested for all of it.
 	let request = get_block_request(&mut sync, FromBlock::Number(8), 4, &peer_id);
@@ -1549,6 +1553,7 @@ fn gap_sync_body_cutoff_moves_with_advancing_finality() {
 	// `BodiesWithinWindow(3)` the body cutoff starts at #7. `max_blocks_per_request` is 2.
 	let mut sync = ChainSync::new(
 		ChainSyncMode::Full,
+		Default::default(),
 		client.clone(),
 		5,
 		2,
@@ -1569,7 +1574,7 @@ fn gap_sync_body_cutoff_moves_with_advancing_finality() {
 
 	// The first pass requests range #7..=#8 with bodies (above the cutoff #7).
 	let peer_id1 = PeerId::random();
-	sync.add_peer(peer_id1, blocks[11].hash(), 12);
+	sync.add_peer(peer_id1, blocks[11].hash(), 12, true);
 	let request = get_block_request(&mut sync, FromBlock::Number(8), 2, &peer_id1);
 	assert!(request.fields.contains(BlockAttributes::BODY));
 
@@ -1577,7 +1582,7 @@ fn gap_sync_body_cutoff_moves_with_advancing_finality() {
 	// remaining range #9..=#9 header-only.
 	client.finalize_block(blocks[11].hash(), None).unwrap();
 	let peer_id2 = PeerId::random();
-	sync.add_peer(peer_id2, blocks[11].hash(), 12);
+	sync.add_peer(peer_id2, blocks[11].hash(), 12, true);
 	let request = get_block_request(&mut sync, FromBlock::Number(9), 1, &peer_id2);
 	assert!(!request.fields.contains(BlockAttributes::BODY));
 }
@@ -1594,6 +1599,7 @@ fn gap_sync_pauses_above_body_cutoff_while_major_syncing() {
 	// `BodiesWithinWindow(3)` the body cutoff is #7. `max_blocks_per_request` is 2.
 	let mut sync = ChainSync::new(
 		ChainSyncMode::Full,
+		Default::default(),
 		client.clone(),
 		5,
 		2,
@@ -1614,9 +1620,9 @@ fn gap_sync_pauses_above_body_cutoff_while_major_syncing() {
 
 	// A peer far ahead of our best block #10 puts the node into major sync.
 	let peer_ahead = PeerId::random();
-	sync.add_peer(peer_ahead, blocks[9].hash(), 100);
+	sync.add_peer(peer_ahead, blocks[9].hash(), 100, true);
 	let peer_gap = PeerId::random();
-	sync.add_peer(peer_gap, blocks[9].hash(), 10);
+	sync.add_peer(peer_gap, blocks[9].hash(), 10, true);
 	assert!(sync.status().state.is_major_syncing());
 
 	// While major syncing, gap scheduling is clamped to the stale cutoff: instead of
@@ -1667,6 +1673,7 @@ fn gap_sync_empty_body_response_drops_peer_and_frees_range() {
 	// `BodiesWithinWindow(3)` the body cutoff is #7.
 	let mut sync = ChainSync::new(
 		ChainSyncMode::Full,
+		Default::default(),
 		client.clone(),
 		5,
 		2,
@@ -1686,7 +1693,7 @@ fn gap_sync_empty_body_response_drops_peer_and_frees_range() {
 	});
 
 	let peer_id1 = PeerId::random();
-	sync.add_peer(peer_id1, blocks[9].hash(), 10);
+	sync.add_peer(peer_id1, blocks[9].hash(), 10, true);
 	let request = get_block_request(&mut sync, FromBlock::Number(8), 2, &peer_id1);
 	assert!(request.fields.contains(BlockAttributes::BODY));
 
@@ -1702,7 +1709,7 @@ fn gap_sync_empty_body_response_drops_peer_and_frees_range() {
 	// the identical body-bearing request goes out to the next peer.
 	sync.remove_peer(&peer_id1);
 	let peer_id2 = PeerId::random();
-	sync.add_peer(peer_id2, blocks[9].hash(), 10);
+	sync.add_peer(peer_id2, blocks[9].hash(), 10, true);
 	let request = get_block_request(&mut sync, FromBlock::Number(8), 2, &peer_id2);
 	assert!(request.fields.contains(BlockAttributes::BODY));
 }
@@ -1711,6 +1718,7 @@ fn gap_sync_empty_body_response_drops_peer_and_frees_range() {
 fn new_test_sync(client: Arc<TestClient>) -> ChainSync<Block, TestClient> {
 	ChainSync::new(
 		ChainSyncMode::Full,
+		Default::default(),
 		client,
 		1,
 		2,
@@ -1750,7 +1758,7 @@ fn ancestry_search_releases_block_download(#[case] gap: bool) {
 	let peers = [PeerId::random(), PeerId::random()];
 	let best = if gap { 10 } else { 2 };
 	for peer in peers {
-		sync.add_peer(peer, blocks[best - 1].hash(), best as u64);
+		sync.add_peer(peer, blocks[best - 1].hash(), best as u64, true);
 	}
 	// Only one range exists, so exactly one peer is assigned it and the other stays idle.
 	let mut requests = sync.block_requests();
@@ -1794,10 +1802,10 @@ fn ancestry_search_requeues_justification_download() {
 	let mut sync = new_test_sync(client);
 	let busy = PeerId::random();
 	let idle = PeerId::random();
-	sync.add_peer(busy, block.hash(), 1);
+	sync.add_peer(busy, block.hash(), 1, true);
 	sync.request_justification(&block.hash(), 1);
 	assert_eq!(sync.justification_requests().len(), 1);
-	sync.add_peer(idle, block.hash(), 1);
+	sync.add_peer(idle, block.hash(), 1, true);
 
 	let mut header = block.header().clone();
 	header.set_parent_hash(Hash::random());
@@ -1819,7 +1827,7 @@ fn ancestry_search_allows_state_request_to_move_to_another_peer() {
 	let mut sync = new_test_sync(client);
 	let peers = [PeerId::random(), PeerId::random()];
 	for peer in peers {
-		sync.add_peer(peer, block.hash(), 1);
+		sync.add_peer(peer, block.hash(), 1, true);
 	}
 	sync.attempt_state_sync(block.hash(), 1, false);
 	let (busy, original) = sync.state_request().unwrap();
@@ -1840,7 +1848,7 @@ fn ancestry_search_preserves_pending_fork_download() {
 	let blocks = (0..3).map(|_| build_block(&client, None, false)).collect::<Vec<_>>();
 	let mut sync = new_test_sync(client);
 	let peer = PeerId::random();
-	sync.add_peer(peer, blocks[2].hash(), 3);
+	sync.add_peer(peer, blocks[2].hash(), 3, true);
 	let fork_hash = Hash::random();
 	sync.set_sync_fork_request(vec![peer], &fork_hash, 2);
 	get_block_request(&mut sync, FromBlock::Hash(fork_hash), 2, &peer);
@@ -1871,7 +1879,7 @@ fn restart_drops_gap_sync_when_database_reports_no_gap() {
 	assert!(client.info().block_gap.is_none());
 	let mut sync = new_test_sync(client);
 	let peer = PeerId::random();
-	sync.add_peer(peer, sync.best_queued_hash, 0);
+	sync.add_peer(peer, sync.best_queued_hash, 0, true);
 	sync.gap_sync = Some(GapSync {
 		best_queued_number: 8,
 		target: 8,
@@ -1906,6 +1914,7 @@ fn regular_sync_always_requests_bodies_regardless_of_pruning() {
 
 		let mut sync = ChainSync::new(
 			ChainSyncMode::Full,
+			Default::default(),
 			client.clone(),
 			5,
 			64,
@@ -1923,7 +1932,7 @@ fn regular_sync_always_requests_bodies_regardless_of_pruning() {
 		assert!(sync.gap_sync.is_none(), "[{policy:?}] Should not have gap sync active");
 
 		// Add peer ahead of us to trigger regular sync
-		sync.add_peer(peer_id, blocks[4].hash(), 5);
+		sync.add_peer(peer_id, blocks[4].hash(), 5, true);
 
 		let requests = sync.block_requests();
 
@@ -1979,6 +1988,7 @@ fn no_ancestry_search_during_major_sync() {
 
 	let mut sync = ChainSync::new(
 		ChainSyncMode::Full,
+		Default::default(),
 		client.clone(),
 		5,
 		64,
@@ -1997,7 +2007,7 @@ fn no_ancestry_search_during_major_sync() {
 	let best_block_num = *best_block.header().number();
 
 	// peer1 is far ahead — triggers ancestry search since queue is empty.
-	sync.add_peer(peer_id1, best_block.hash(), best_block_num);
+	sync.add_peer(peer_id1, best_block.hash(), best_block_num, true);
 	assert!(matches!(
 		sync.peers.get(&peer_id1).unwrap().state,
 		PeerSyncState::AncestorSearch { .. }
@@ -2009,7 +2019,7 @@ fn no_ancestry_search_during_major_sync() {
 	}
 
 	// peer2 is added — should be `Available` because queue_blocks > MAJOR_SYNC_BLOCKS.
-	sync.add_peer(peer_id2, best_block.hash(), best_block_num);
+	sync.add_peer(peer_id2, best_block.hash(), best_block_num, true);
 	assert_eq!(sync.peers.get(&peer_id2).unwrap().state, PeerSyncState::Available);
 
 	// peer2 announces a new best block whose parent is NOT peer.best_hash.
