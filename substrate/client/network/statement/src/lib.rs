@@ -6297,14 +6297,17 @@ mod tests {
 		handler.handle_sync_event(SyncEvent::PeerConnected {
 			peer_id: peer1,
 			roles: sc_network::Roles::FULL,
+			is_synced: false,
 		});
 		handler.handle_sync_event(SyncEvent::PeerConnected {
 			peer_id: peer2,
 			roles: sc_network::Roles::FULL,
+			is_synced: false,
 		});
 		handler.handle_sync_event(SyncEvent::PeerConnected {
 			peer_id: peer3,
 			roles: sc_network::Roles::FULL,
+			is_synced: false,
 		});
 
 		// No network calls while major sync is active

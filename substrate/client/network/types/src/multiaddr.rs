@@ -20,6 +20,7 @@ use litep2p::types::multiaddr::{
 	Error as LiteP2pError, Iter as LiteP2pIter, Multiaddr as LiteP2pMultiaddr,
 	Protocol as LiteP2pProtocol,
 };
+use multiaddr::Multiaddr as LibP2pMultiaddr;
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 use std::{
 	fmt::{self, Debug, Display},
@@ -101,6 +102,20 @@ impl From<LiteP2pMultiaddr> for Multiaddr {
 impl From<Multiaddr> for LiteP2pMultiaddr {
 	fn from(multiaddr: Multiaddr) -> Self {
 		multiaddr.multiaddr
+	}
+}
+
+// `litep2p` uses `multiaddr` 0.18 while the libp2p backend uses `multiaddr` 0.19, so these
+// conversions are explicit rather than the identity upstream relies on.
+impl From<LibP2pMultiaddr> for Multiaddr {
+	fn from(multiaddr: LibP2pMultiaddr) -> Self {
+		multiaddr.into_iter().map(Into::into).collect()
+	}
+}
+
+impl From<Multiaddr> for LibP2pMultiaddr {
+	fn from(multiaddr: Multiaddr) -> Self {
+		multiaddr.into_iter().map(Into::into).collect()
 	}
 }
 impl From<IpAddr> for Multiaddr {

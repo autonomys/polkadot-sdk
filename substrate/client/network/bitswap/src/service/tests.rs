@@ -183,11 +183,11 @@ fn to_types_peer(peer: litep2p::PeerId) -> TypesPeerId {
 }
 
 fn sync_connected(peer: litep2p::PeerId) -> SyncEvent {
-	SyncEvent::PeerConnected { peer_id: to_types_peer(peer), roles: Roles::FULL }
+	SyncEvent::PeerConnected { peer_id: to_types_peer(peer), roles: Roles::FULL, is_synced: false }
 }
 
 fn sync_connected_light(peer: litep2p::PeerId) -> SyncEvent {
-	SyncEvent::PeerConnected { peer_id: to_types_peer(peer), roles: Roles::LIGHT }
+	SyncEvent::PeerConnected { peer_id: to_types_peer(peer), roles: Roles::LIGHT, is_synced: false }
 }
 
 fn sync_disconnected(peer: litep2p::PeerId) -> SyncEvent {

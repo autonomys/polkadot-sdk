@@ -683,8 +683,11 @@ impl<B: BlockT> BitswapService<B> {
 				},
 
 				sync_event = self.sync_event_stream.next() => match sync_event {
-					Some(SyncEvent::PeerConnected { peer_id, roles }) =>
+					Some(SyncEvent::PeerConnected { peer_id, roles, is_synced: _ }) =>
 						self.on_peer_connected(peer_id.into(), roles).await,
+					Some(SyncEvent::PeerSyncState { .. }) => {
+						// Ignore.
+					},
 					Some(SyncEvent::PeerDisconnected(peer)) => self.on_peer_disconnected(peer.into()).await,
 					None => {
 						log::debug!(target: LOG_TARGET, "sync event stream ended; shutting down");

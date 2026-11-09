@@ -19,6 +19,7 @@
 use crate::multihash::Multihash;
 use libp2p_identity::PeerId;
 use litep2p::types::multiaddr::Protocol as LiteP2pProtocol;
+use litep2p::PeerId as LiteP2pPeerId;
 use multiaddr::Protocol as LibP2pProtocol;
 use std::{
 	borrow::Cow,
@@ -194,6 +195,97 @@ impl<'a> From<Protocol<'a>> for LibP2pProtocol<'a> {
 			Protocol::Utp => LibP2pProtocol::Utp,
 			Protocol::Ws(str) => LibP2pProtocol::Ws(str),
 			Protocol::Wss(str) => LibP2pProtocol::Wss(str),
+		}
+	}
+}
+
+// `litep2p` re-exports `multiaddr` 0.18, while the libp2p backend uses `multiaddr` 0.19.
+// Those are distinct types, so conversions between this crate's `Protocol` and litep2p's
+// `Protocol` have to be written out. Upstream can rely on the two types being identical.
+impl<'a> From<LiteP2pProtocol<'a>> for Protocol<'a> {
+	fn from(protocol: LiteP2pProtocol<'a>) -> Self {
+		match protocol {
+			LiteP2pProtocol::Dccp(port) => Protocol::Dccp(port),
+			LiteP2pProtocol::Dns(str) => Protocol::Dns(str),
+			LiteP2pProtocol::Dns4(str) => Protocol::Dns4(str),
+			LiteP2pProtocol::Dns6(str) => Protocol::Dns6(str),
+			LiteP2pProtocol::Dnsaddr(str) => Protocol::Dnsaddr(str),
+			LiteP2pProtocol::Http => Protocol::Http,
+			LiteP2pProtocol::Https => Protocol::Https,
+			LiteP2pProtocol::Ip4(ipv4_addr) => Protocol::Ip4(ipv4_addr),
+			LiteP2pProtocol::Ip6(ipv6_addr) => Protocol::Ip6(ipv6_addr),
+			LiteP2pProtocol::P2pWebRtcDirect => Protocol::P2pWebRtcDirect,
+			LiteP2pProtocol::P2pWebRtcStar => Protocol::P2pWebRtcStar,
+			LiteP2pProtocol::WebRTCDirect => Protocol::WebRTCDirect,
+			LiteP2pProtocol::Certhash(multihash) => Protocol::Certhash(multihash.into()),
+			LiteP2pProtocol::P2pWebSocketStar => Protocol::P2pWebSocketStar,
+			LiteP2pProtocol::Memory(port) => Protocol::Memory(port),
+			LiteP2pProtocol::Onion(str, port) => Protocol::Onion(str, port),
+			LiteP2pProtocol::Onion3(addr) => Protocol::Onion3(Cow::Owned(*addr.hash()), addr.port()),
+			LiteP2pProtocol::P2p(peer_id) => Protocol::P2p((*peer_id.as_ref()).into()),
+			LiteP2pProtocol::P2pCircuit => Protocol::P2pCircuit,
+			LiteP2pProtocol::Quic => Protocol::Quic,
+			LiteP2pProtocol::QuicV1 => Protocol::QuicV1,
+			LiteP2pProtocol::Sctp(port) => Protocol::Sctp(port),
+			LiteP2pProtocol::Tcp(port) => Protocol::Tcp(port),
+			LiteP2pProtocol::Tls => Protocol::Tls,
+			LiteP2pProtocol::Noise => Protocol::Noise,
+			LiteP2pProtocol::Udp(port) => Protocol::Udp(port),
+			LiteP2pProtocol::Udt => Protocol::Udt,
+			LiteP2pProtocol::Unix(str) => Protocol::Unix(str),
+			LiteP2pProtocol::Utp => Protocol::Utp,
+			LiteP2pProtocol::Ws(str) => Protocol::Ws(str),
+			LiteP2pProtocol::Wss(str) => Protocol::Wss(str),
+			protocol => {
+				log::error!(
+					target: LOG_TARGET,
+					"Got unsupported multiaddr protocol '{}'",
+					protocol.tag(),
+				);
+				Protocol::Dccp(0)
+			},
+		}
+	}
+}
+
+impl<'a> From<Protocol<'a>> for LiteP2pProtocol<'a> {
+	fn from(protocol: Protocol<'a>) -> Self {
+		match protocol {
+			Protocol::Dccp(port) => LiteP2pProtocol::Dccp(port),
+			Protocol::Dns(str) => LiteP2pProtocol::Dns(str),
+			Protocol::Dns4(str) => LiteP2pProtocol::Dns4(str),
+			Protocol::Dns6(str) => LiteP2pProtocol::Dns6(str),
+			Protocol::Dnsaddr(str) => LiteP2pProtocol::Dnsaddr(str),
+			Protocol::Http => LiteP2pProtocol::Http,
+			Protocol::Https => LiteP2pProtocol::Https,
+			Protocol::Ip4(ipv4_addr) => LiteP2pProtocol::Ip4(ipv4_addr),
+			Protocol::Ip6(ipv6_addr) => LiteP2pProtocol::Ip6(ipv6_addr),
+			Protocol::P2pWebRtcDirect => LiteP2pProtocol::P2pWebRtcDirect,
+			Protocol::P2pWebRtcStar => LiteP2pProtocol::P2pWebRtcStar,
+			Protocol::WebRTCDirect => LiteP2pProtocol::WebRTCDirect,
+			Protocol::Certhash(multihash) => LiteP2pProtocol::Certhash(multihash.into()),
+			Protocol::P2pWebSocketStar => LiteP2pProtocol::P2pWebSocketStar,
+			Protocol::Memory(port) => LiteP2pProtocol::Memory(port),
+			Protocol::Onion(str, port) => LiteP2pProtocol::Onion(str, port),
+			Protocol::Onion3(str, port) => LiteP2pProtocol::Onion3((str.into_owned(), port).into()),
+			Protocol::P2p(multihash) => LiteP2pProtocol::P2p(
+				LiteP2pPeerId::from_multihash(multihash)
+					.expect("local multihash is always a valid peer ID; qed")
+					.into(),
+			),
+			Protocol::P2pCircuit => LiteP2pProtocol::P2pCircuit,
+			Protocol::Quic => LiteP2pProtocol::Quic,
+			Protocol::QuicV1 => LiteP2pProtocol::QuicV1,
+			Protocol::Sctp(port) => LiteP2pProtocol::Sctp(port),
+			Protocol::Tcp(port) => LiteP2pProtocol::Tcp(port),
+			Protocol::Tls => LiteP2pProtocol::Tls,
+			Protocol::Noise => LiteP2pProtocol::Noise,
+			Protocol::Udp(port) => LiteP2pProtocol::Udp(port),
+			Protocol::Udt => LiteP2pProtocol::Udt,
+			Protocol::Unix(str) => LiteP2pProtocol::Unix(str),
+			Protocol::Utp => LiteP2pProtocol::Utp,
+			Protocol::Ws(str) => LiteP2pProtocol::Ws(str),
+			Protocol::Wss(str) => LiteP2pProtocol::Wss(str),
 		}
 	}
 }

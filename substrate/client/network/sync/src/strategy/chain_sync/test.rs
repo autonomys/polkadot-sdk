@@ -2018,6 +2018,7 @@ fn no_ancestry_search_during_major_sync() {
 
 	let announce = BlockAnnounce {
 		header: fork_block.header().clone(),
+		is_synced: true,
 		state: Some(BlockState::Best),
 		data: Some(Vec::new()),
 	};

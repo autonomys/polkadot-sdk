@@ -141,6 +141,13 @@ impl From<libp2p_identity::PeerId> for PeerId {
 	}
 }
 
+// Peer ID type of `libp2p-identity` 0.2, which `litep2p`'s `multiaddr` 0.18 uses.
+impl From<libp2p_identity_02::PeerId> for PeerId {
+	fn from(peer_id: libp2p_identity_02::PeerId) -> Self {
+		PeerId { multihash: Multihash::from_bytes(&peer_id.to_bytes()).expect("to succeed") }
+	}
+}
+
 impl From<PeerId> for libp2p_identity::PeerId {
 	fn from(peer_id: PeerId) -> Self {
 		libp2p_identity::PeerId::from_bytes(&peer_id.to_bytes()).expect("to succeed")
