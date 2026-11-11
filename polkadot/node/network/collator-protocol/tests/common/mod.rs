@@ -43,5 +43,5 @@ pub mod aux {
 	pub use crate::common::aux_real::{
 		backing::CandidateBackingAux, prospective::ProspectiveParachainsAux,
 	};
-	pub use polkadot_subsystem_test_sim::aux::*;
+	pub use polkadot_subsystem_test_sim::auxiliary::*;
 }
